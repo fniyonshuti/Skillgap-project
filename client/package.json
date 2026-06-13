@@ -17,7 +17,6 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.2",
     "recharts": "^2.15.0",
-    "skills-gap-analysis-tool": "file:..",
     "vite": "^6.0.7"
   }
 }

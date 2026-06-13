@@ -89,3 +89,38 @@ After seeding:
 See [docs/PROJECT_BLUEPRINT.md](docs/PROJECT_BLUEPRINT.md) for architecture, database design, UML diagrams, and roadmap.
 
 For MongoDB setup help, see [docs/database/SETUP.md](docs/database/SETUP.md).
+
+## Render Deployment
+
+This repository contains separate `server` and `client` applications. The root install script
+installs both applications, so the following Render web-service settings work from the repository
+root:
+
+```text
+Build Command: npm ci
+Start Command: npm start
+Health Check Path: /health
+```
+
+Configure these environment variables on the backend service:
+
+```env
+NODE_ENV=production
+MONGO_URI=<MongoDB Atlas connection string>
+JWT_SECRET=<long random secret>
+JWT_EXPIRES_IN=1d
+CLIENT_URL=<deployed frontend origin, without a trailing slash>
+ADMIN_REGISTRATION_CODE=<private setup code>
+```
+
+Deploy the `client` directory as a Render Static Site:
+
+```text
+Root Directory: client
+Build Command: npm ci && npm run build
+Publish Directory: dist
+```
+
+Set `VITE_API_URL` on the static site to the backend URL ending in `/api`, for example
+`https://your-api-service.onrender.com/api`. Add a rewrite from `/*` to `/index.html` so React
+Router routes work when opened directly.
