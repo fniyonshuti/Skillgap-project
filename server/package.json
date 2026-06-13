@@ -9,7 +9,8 @@
     "seed": "node src/scripts/seed.js",
     "migrate:question-banks": "node src/scripts/migrateQuestionBanks.js",
     "lint": "node --check src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:core": "node scripts/coreFlows.smoke.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -77,7 +77,6 @@ function createEmptyForm(domainId = "") {
     standardStatus: "active",
     description: "",
     evidenceExamplesText: "",
-    recommendationGuidance: "",
     assessmentQuestions: makeQuestionBank("")
   };
 }
@@ -116,7 +115,7 @@ export function CompetenciesPage() {
   }
 
   useEffect(() => {
-    load();
+    load().catch((err) => setError(getErrorMessage(err)));
   }, []);
 
   const standardStats = useMemo(
@@ -156,7 +155,6 @@ export function CompetenciesPage() {
       standardStatus: competency.standardStatus || "active",
       description: competency.description || "",
       evidenceExamplesText: (competency.evidenceExamples || []).join("\n"),
-      recommendationGuidance: competency.recommendationGuidance || "",
       assessmentQuestions:
         competency.assessmentQuestions?.length > 0
           ? competency.assessmentQuestions.map((question) => ({
@@ -504,14 +502,6 @@ export function CompetenciesPage() {
               value={form.evidenceExamplesText}
               onChange={(event) => setForm({ ...form, evidenceExamplesText: event.target.value })}
               placeholder={"One item per line, for example:\nResponsive portfolio project\nPractical lab task\nSupervisor validation"}
-            />
-          </label>
-          <label>
-            Recommendation guidance
-            <textarea
-              value={form.recommendationGuidance}
-              onChange={(event) => setForm({ ...form, recommendationGuidance: event.target.value })}
-              placeholder="Optional standard-specific advice shown when a graduate has a gap."
             />
           </label>
         </div>

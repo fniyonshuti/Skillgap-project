@@ -10,6 +10,7 @@ import { LoginPage } from "./pages/LoginPage.jsx";
 import { NotificationsPage } from "./pages/NotificationsPage.jsx";
 import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { RecommendationsPage } from "./pages/RecommendationsPage.jsx";
+import { RecommendationRulesPage } from "./pages/RecommendationRulesPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
 import { ReportsPage } from "./pages/ReportsPage.jsx";
 
@@ -29,6 +30,9 @@ export function App() {
           </Route>
           <Route element={<ProtectedRoute roles={["institution", "admin"]} />}>
             <Route path="/graduates" element={<GraduatesPage />} />
+          </Route>
+          <Route element={<ProtectedRoute roles={["institution"]} />}>
+            <Route path="/recommendation-rules" element={<RecommendationRulesPage />} />
           </Route>
           <Route element={<ProtectedRoute roles={["admin"]} />}>
             <Route path="/competencies" element={<CompetenciesPage />} />

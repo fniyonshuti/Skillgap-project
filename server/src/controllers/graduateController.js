@@ -47,7 +47,16 @@ export const updateMyGraduateProfile = asyncHandler(async (req, res) => {
     Object.entries(req.body).filter(([key]) => allowed.includes(key))
   );
 
-  if (!updates.institutionId) delete updates.institutionId;
+  if (Object.hasOwn(updates, "institutionId")) {
+    if (updates.institutionId) {
+      const institutionExists = await Institution.exists({ _id: updates.institutionId });
+      if (!institutionExists) {
+        throw new ApiError(404, "Selected institution was not found.");
+      }
+    } else {
+      updates.institutionId = null;
+    }
+  }
   if (!updates.registrationNumber) delete updates.registrationNumber;
 
   const nextProgram = updates.program ?? existing.program;

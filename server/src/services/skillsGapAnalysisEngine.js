@@ -75,7 +75,6 @@ export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
     return {
       gapScore,
       gapClassification: "No Gap",
-      recommendation: "Maintain competency level",
       severity: "none",
       priority: "none"
     };
@@ -85,7 +84,6 @@ export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
     return {
       gapScore,
       gapClassification: "Low Gap",
-      recommendation: "Minor competency improvement needed",
       severity: "low",
       priority: "low"
     };
@@ -95,7 +93,6 @@ export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
     return {
       gapScore,
       gapClassification: "Moderate Gap",
-      recommendation: "Additional practical training required",
       severity: "moderate",
       priority: "medium"
     };
@@ -104,7 +101,6 @@ export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
   return {
     gapScore,
     gapClassification: "High Gap",
-    recommendation: "Intensive upskilling required",
     severity: "high",
     priority: "high"
   };
@@ -133,7 +129,6 @@ export function runSkillsGapAnalysis({
     requiredRtbLevel: Number(requiredRtbLevel),
     gapScore: gapResult.gapScore,
     gapClassification: gapResult.gapClassification,
-    recommendation: gapResult.recommendation,
     severity: gapResult.severity,
     priority: gapResult.priority
   });

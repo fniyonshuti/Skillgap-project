@@ -95,10 +95,6 @@ const competencySchema = new mongoose.Schema(
       enum: ["draft", "active", "archived"],
       default: "active"
     },
-    recommendationGuidance: {
-      type: String,
-      trim: true
-    },
     assessmentQuestions: {
       type: [assessmentQuestionSchema],
       default: []

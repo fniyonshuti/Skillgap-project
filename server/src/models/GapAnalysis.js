@@ -45,10 +45,6 @@ const gapItemSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    engineRecommendation: {
-      type: String,
-      trim: true
-    },
     mappingStatus: {
       type: String,
       enum: ["mapped", "unmapped"],

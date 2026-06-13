@@ -12,16 +12,18 @@ Web-based capstone project for identifying the gap between ICT skills possessed 
 ## Core Analysis Workflow
 
 1. Administrators register RTB ICT standards, required Levels 1-4, and a private scoring question bank.
-2. Graduates select a competency area, answer structured questions, and upload supporting evidence.
-3. The backend validates answer IDs, privately derives the four source scores, and calculates the weighted competency score using `40% / 30% / 20% / 10%`.
-4. The system determines the competency level, retrieves RTB standards, calculates and classifies the gap.
-5. Personalized recommendations and a saved competency report are generated automatically.
-6. Graduates view their report, recommendations, assessment history, and then log out.
+2. Institutions define the low, moderate, and high gap recommendation rules for their graduates.
+3. Graduates select a competency area, answer structured questions, and upload supporting evidence.
+4. The backend validates answer IDs, privately derives the four source scores, and calculates the weighted competency score using `40% / 30% / 20% / 10%`.
+5. The system determines the competency level, retrieves RTB standards, and classifies the gap.
+6. The matching institution-defined recommendation and a saved competency report are generated automatically.
+7. Graduates view their report, recommendations, assessment history, and then log out.
 
 The authoritative implementation is
 `server/src/services/skillsGapAnalysisEngine.js`. Gap score is calculated as
 `Required RTB Level - Graduate Level`; values less than or equal to zero are classified as `No Gap`.
 Graduates never submit numeric scores, and scoring points are not returned by the graduate API.
+Recommendation text and action checklists are defined only by the graduate's institution.
 
 ## Quick Start
 
@@ -62,6 +64,9 @@ For an existing database created before system-scored questions were added, run:
 ```bash
 npm run migrate:question-banks
 ```
+
+For existing institutions, sign in with the institution account and complete the
+**Recommendation Rules** page before graduates submit new assessments.
 
 5. Run the app:
 

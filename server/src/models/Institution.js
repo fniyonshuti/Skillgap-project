@@ -1,5 +1,33 @@
 import mongoose from "mongoose";
 
+const recommendationRuleSchema = new mongoose.Schema(
+  {
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      required: true
+    },
+    recommendationText: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    actionItems: {
+      type: [{ type: String, trim: true }],
+      validate: {
+        validator: (items) => items.length > 0,
+        message: "Each recommendation rule requires at least one action item."
+      }
+    },
+    resourceType: {
+      type: String,
+      enum: ["course", "practice", "certification", "mentorship"],
+      required: true
+    }
+  },
+  { _id: false }
+);
+
 const institutionSchema = new mongoose.Schema(
   {
     name: {
@@ -35,7 +63,12 @@ const institutionSchema = new mongoose.Schema(
     accountUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
-    }
+    },
+    recommendationRules: {
+      type: [recommendationRuleSchema],
+      default: []
+    },
+    recommendationRulesUpdatedAt: Date
   },
   { timestamps: true }
 );

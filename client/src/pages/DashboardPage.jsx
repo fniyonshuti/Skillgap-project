@@ -2,14 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MetricCard } from "../components/MetricCard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { api } from "../services/api.js";
+import { api, getErrorMessage } from "../services/api.js";
 
 export function DashboardPage() {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/analytics/dashboard").then(({ data }) => setAnalytics(data));
+    api
+      .get("/analytics/dashboard")
+      .then(({ data }) => setAnalytics(data))
+      .catch((err) => setError(getErrorMessage(err)));
   }, []);
 
   const cards = useMemo(() => {
@@ -54,6 +58,8 @@ export function DashboardPage() {
           <p>Current performance and activity summary.</p>
         </div>
       </div>
+
+      {error && <div className="alert error">{error}</div>}
 
       <div className="metrics-grid">
         {cards.map(([label, value, tone]) => (

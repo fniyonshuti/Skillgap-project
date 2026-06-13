@@ -145,6 +145,14 @@ classDiagram
         +String contactEmail
         +String contactPhone
         +String address
+        +RecommendationRule[] recommendationRules
+    }
+
+    class RecommendationRule {
+        +Priority priority
+        +String recommendationText
+        +String[] actionItems
+        +ResourceType resourceType
     }
 
     class ICTDomain {
@@ -165,7 +173,6 @@ classDiagram
         +String version
         +Date effectiveDate
         +StandardStatus standardStatus
-        +String recommendationGuidance
         +Boolean isActive
     }
 

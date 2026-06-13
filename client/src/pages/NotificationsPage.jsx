@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
-import { api } from "../services/api.js";
+import { api, getErrorMessage } from "../services/api.js";
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
+  const [error, setError] = useState("");
 
   async function load() {
-    const { data } = await api.get("/notifications");
-    setNotifications(data);
+    try {
+      const { data } = await api.get("/notifications");
+      setNotifications(data);
+      setError("");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   }
 
   useEffect(() => {
@@ -14,8 +20,12 @@ export function NotificationsPage() {
   }, []);
 
   async function markRead(id) {
-    await api.patch(`/notifications/${id}/read`);
-    load();
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      await load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   }
 
   return (
@@ -26,6 +36,8 @@ export function NotificationsPage() {
           <p>System messages and assessment updates.</p>
         </div>
       </div>
+
+      {error && <div className="alert error">{error}</div>}
 
       <div className="notification-list">
         {notifications.map((notification) => (

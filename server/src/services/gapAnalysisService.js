@@ -1,9 +1,12 @@
 import { Competency } from "../models/Competency.js";
 import { GapAnalysis } from "../models/GapAnalysis.js";
+import { Graduate } from "../models/Graduate.js";
+import { Institution } from "../models/Institution.js";
 import { Recommendation } from "../models/Recommendation.js";
 import { buildRecommendation } from "./recommendationService.js";
 import { classifyGap, normalizeLegacyAssessmentItem } from "./competencyScoringService.js";
 import { SKILLS_GAP_ENGINE_VERSION } from "./skillsGapAnalysisEngine.js";
+import { ApiError } from "../utils/apiError.js";
 
 function summaryFromScores(readinessScore, highPriorityCount) {
   if (readinessScore >= 85 && highPriorityCount === 0) {
@@ -38,8 +41,7 @@ export async function generateGapAnalysis(assessment, engineResults = []) {
           gapLevel: engineResult.gapScore,
           severity: engineResult.severity,
           priority: engineResult.priority,
-          label: engineResult.gapClassification,
-          action: engineResult.recommendation
+          label: engineResult.gapClassification
         }
       : classifyGap(requiredLevel, legacyResult.competencyLevel);
 
@@ -53,7 +55,6 @@ export async function generateGapAnalysis(assessment, engineResults = []) {
       gapLevel: gap.gapLevel,
       severity: gap.severity,
       classification: gap.label,
-      engineRecommendation: gap.action,
       priority: gap.priority,
       mappingStatus: competency ? "mapped" : "unmapped",
       rtbReference: competency?.rtbReference || item.mappingSnapshot?.rtbReference,
@@ -73,6 +74,51 @@ export async function generateGapAnalysis(assessment, engineResults = []) {
     (counts, item) => ({ ...counts, [item.severity]: counts[item.severity] + 1 }),
     { none: 0, low: 0, moderate: 0, high: 0 }
   );
+  const recommendationPriorities = [
+    ...new Set(
+      gapItems
+        .filter((item) => item.priority !== "none")
+        .map((item) => item.priority)
+    )
+  ];
+  let institution = null;
+
+  if (recommendationPriorities.length) {
+    const graduate = await Graduate.findById(assessment.graduateId).select("institutionId");
+    if (!graduate?.institutionId) {
+      throw new ApiError(
+        400,
+        "Select an institution before submitting an assessment that requires recommendations."
+      );
+    }
+
+    institution = await Institution.findById(graduate.institutionId).select(
+      "recommendationRules"
+    );
+    if (!institution) {
+      throw new ApiError(400, "The graduate institution was not found.");
+    }
+
+    const configuredPriorities = new Set(
+      institution.recommendationRules
+        .filter(
+          (rule) =>
+            rule.recommendationText?.trim() &&
+            rule.actionItems?.length &&
+            rule.resourceType
+        )
+        .map((rule) => rule.priority)
+    );
+    const missingPriorities = recommendationPriorities.filter(
+      (priority) => !configuredPriorities.has(priority)
+    );
+    if (missingPriorities.length) {
+      throw new ApiError(
+        400,
+        `The institution must configure recommendation rules for: ${missingPriorities.join(", ")}.`
+      );
+    }
+  }
 
   const gapAnalysis = await GapAnalysis.create({
     assessmentId: assessment._id,
@@ -93,13 +139,14 @@ export async function generateGapAnalysis(assessment, engineResults = []) {
       const recommendation = buildRecommendation(
         competency,
         item.priority,
-        item.engineRecommendation
+        institution.recommendationRules
       );
 
       return {
         graduateId: assessment.graduateId,
         gapAnalysisId: gapAnalysis._id,
         competencyId: item.competencyId,
+        institutionId: institution._id,
         ...recommendation
       };
     });

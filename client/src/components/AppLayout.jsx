@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Home,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Map,
   ShieldCheck,
@@ -54,6 +55,14 @@ const navItems = [
     icon: GraduationCap,
     section: "Management",
     roles: ["institution", "admin"]
+  },
+  {
+    to: "/recommendation-rules",
+    label: "Recommendation Rules",
+    description: "Define gap actions",
+    icon: ListChecks,
+    section: "Management",
+    roles: ["institution"]
   },
   {
     to: "/competencies",

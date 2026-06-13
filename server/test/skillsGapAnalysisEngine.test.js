@@ -33,7 +33,6 @@ test("runs the complete proposal algorithm for one RTB competency", () => {
     requiredRtbLevel: 4,
     gapScore: 1,
     gapClassification: "Low Gap",
-    recommendation: "Minor competency improvement needed",
     severity: "low",
     priority: "low"
   });
@@ -67,17 +66,17 @@ test("implements every graduate competency level boundary", () => {
   });
 });
 
-test("implements every gap classification and recommendation", () => {
+test("implements every gap classification and priority", () => {
   const cases = [
-    [3, 4, -1, "No Gap", "Maintain competency level"],
-    [4, 4, 0, "No Gap", "Maintain competency level"],
-    [4, 3, 1, "Low Gap", "Minor competency improvement needed"],
-    [4, 2, 2, "Moderate Gap", "Additional practical training required"],
-    [4, 1, 3, "High Gap", "Intensive upskilling required"]
+    [3, 4, -1, "No Gap", "none"],
+    [4, 4, 0, "No Gap", "none"],
+    [4, 3, 1, "Low Gap", "low"],
+    [4, 2, 2, "Moderate Gap", "medium"],
+    [4, 1, 3, "High Gap", "high"]
   ];
 
   cases.forEach(
-    ([requiredRtbLevel, achievedLevel, gapScore, gapClassification, recommendation]) => {
+    ([requiredRtbLevel, achievedLevel, gapScore, gapClassification, priority]) => {
       const evidenceScore = [0, 20, 50, 70, 90][achievedLevel];
       const result = runSkillsGapAnalysis({
         evidenceScores: {
@@ -91,7 +90,8 @@ test("implements every gap classification and recommendation", () => {
 
       assert.equal(result.gapScore, gapScore);
       assert.equal(result.gapClassification, gapClassification);
-      assert.equal(result.recommendation, recommendation);
+      assert.equal(result.priority, priority);
+      assert.equal(Object.hasOwn(result, "recommendation"), false);
     }
   );
 });

@@ -8,12 +8,16 @@ export function ProfilePage() {
   const [institutions, setInstitutions] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get("/graduates/me"), api.get("/institutions")]).then(([profileRes, institutionsRes]) => {
-      setLocalProfile(profileRes.data);
-      setInstitutions(institutionsRes.data);
-    });
+    Promise.all([api.get("/graduates/me"), api.get("/institutions")])
+      .then(([profileRes, institutionsRes]) => {
+        setLocalProfile(profileRes.data);
+        setInstitutions(institutionsRes.data);
+      })
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleSubmit(event) {
@@ -39,8 +43,12 @@ export function ProfilePage() {
     }
   }
 
-  if (!profile) {
+  if (loading) {
     return <div className="panel">Loading profile...</div>;
+  }
+
+  if (!profile) {
+    return <div className="alert error">{error || "Graduate profile could not be loaded."}</div>;
   }
 
   return (

@@ -38,6 +38,10 @@ async function resolveGraduateForReport(req) {
 
 export const generateGraduateReport = asyncHandler(async (req, res) => {
   const format = req.query.format || "json";
+  if (!["json", "csv", "pdf"].includes(format)) {
+    throw new ApiError(400, "Report format must be json, csv, or pdf.");
+  }
+
   const graduate = await resolveGraduateForReport(req);
   const gapAnalysis = await GapAnalysis.findOne({ graduateId: graduate._id })
     .populate("domainId")

@@ -17,6 +17,10 @@ const recommendationSchema = new mongoose.Schema(
       ref: "Competency",
       required: true
     },
+    institutionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institution"
+    },
     recommendationText: {
       type: String,
       required: true,
@@ -53,5 +57,6 @@ const recommendationSchema = new mongoose.Schema(
 
 recommendationSchema.index({ graduateId: 1, status: 1 });
 recommendationSchema.index({ gapAnalysisId: 1 });
+recommendationSchema.index({ institutionId: 1, priority: 1 });
 
 export const Recommendation = mongoose.model("Recommendation", recommendationSchema);

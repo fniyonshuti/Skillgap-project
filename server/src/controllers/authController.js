@@ -110,28 +110,33 @@ export const register = asyncHandler(async (req, res) => {
     role
   });
 
-  if (role === "admin") {
-    // Admin accounts do not need a separate profile document.
-  } else if (role === "institution") {
-    await Institution.create({
-      name: institutionName,
-      code: institutionCode,
-      district: district || "Kicukiro",
-      contactEmail: email,
-      contactPhone: phone,
-      address,
-      accountUserId: user._id
-    });
-  } else {
-    await Graduate.create({
-      userId: user._id,
-      institutionId: selectedInstitutionId,
-      program,
-      graduationYear,
-      phone,
-      district: district || "Kicukiro",
-      profileCompleted: Boolean(program && graduationYear)
-    });
+  try {
+    if (role === "admin") {
+      // Admin accounts do not need a separate profile document.
+    } else if (role === "institution") {
+      await Institution.create({
+        name: institutionName,
+        code: institutionCode,
+        district: district || "Kicukiro",
+        contactEmail: email,
+        contactPhone: phone,
+        address,
+        accountUserId: user._id
+      });
+    } else {
+      await Graduate.create({
+        userId: user._id,
+        institutionId: selectedInstitutionId,
+        program,
+        graduationYear,
+        phone,
+        district: district || "Kicukiro",
+        profileCompleted: Boolean(program && graduationYear)
+      });
+    }
+  } catch (error) {
+    await User.deleteOne({ _id: user._id }).catch(() => null);
+    throw error;
   }
 
   res.status(201).json({

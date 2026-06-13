@@ -9,21 +9,43 @@ export const institutionValidation = [
   body("contactEmail").optional({ checkFalsy: true }).isEmail().withMessage("Invalid contact email.")
 ];
 
+const editableInstitutionFields = [
+  "name",
+  "code",
+  "district",
+  "contactEmail",
+  "contactPhone",
+  "address",
+  "accountUserId"
+];
+
+function institutionDetails(payload) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key]) => editableInstitutionFields.includes(key))
+  );
+}
+
 export const listInstitutions = asyncHandler(async (_req, res) => {
-  const items = await Institution.find().sort({ name: 1 });
+  const items = await Institution.find()
+    .select("-recommendationRules -recommendationRulesUpdatedAt")
+    .sort({ name: 1 });
   res.json(items);
 });
 
 export const createInstitution = asyncHandler(async (req, res) => {
-  const institution = await Institution.create(req.body);
+  const institution = await Institution.create(institutionDetails(req.body));
   res.status(201).json(institution);
 });
 
 export const updateInstitution = asyncHandler(async (req, res) => {
-  const institution = await Institution.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+  const institution = await Institution.findByIdAndUpdate(
+    req.params.id,
+    institutionDetails(req.body),
+    {
+      new: true,
+      runValidators: true
+    }
+  ).select("-recommendationRules -recommendationRulesUpdatedAt");
 
   if (!institution) {
     throw new ApiError(404, "Institution was not found.");

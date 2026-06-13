@@ -45,9 +45,10 @@ export function formatGraduateReportPayload({ graduate, user, gapAnalysis, recom
         size: file.size
       })),
       recommendation:
-        gapItem.engineRecommendation ||
         recommendation?.recommendationText ||
-        "Maintain competency level",
+        (gapItem.priority === "none"
+          ? "No improvement action is required."
+          : "Institution recommendation unavailable."),
       actionItems: recommendation?.actionItems || []
     };
   });

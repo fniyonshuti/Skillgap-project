@@ -14,9 +14,14 @@ export function ReportsPage() {
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
-    api.get("/graduates/me").then(({ data }) => setProfile(data));
+    api
+      .get("/graduates/me")
+      .then(({ data }) => setProfile(data))
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setLoadingProfile(false));
   }, []);
 
   useEffect(() => {
@@ -57,7 +62,11 @@ export function ReportsPage() {
     }
   }
 
-  if (!profile) return <div className="panel">Loading your report workspace...</div>;
+  if (loadingProfile) return <div className="panel">Loading your report workspace...</div>;
+
+  if (!profile) {
+    return <div className="alert error">{error || "Graduate profile could not be loaded."}</div>;
+  }
 
   return (
     <div className="page-stack reports-workspace">

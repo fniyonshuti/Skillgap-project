@@ -60,6 +60,14 @@ Accepted evidence formats are PDF, Word, PNG, JPEG, and WebP, with a maximum fil
 - `GET /recommendations`
 - `PATCH /recommendations/:id/status`
 
+## Institution Recommendation Rules
+
+- `GET /recommendation-rules` - institution role only
+- `PUT /recommendation-rules` - institution role only; saves exactly one `low`, `medium`, and `high` rule
+
+Administrators and graduates cannot read or modify recommendation-rule definitions. The gap engine
+selects a priority, and the recommendation content comes exclusively from the graduate's institution.
+
 ## Reports
 
 - `GET /reports/graduate/:graduateId`

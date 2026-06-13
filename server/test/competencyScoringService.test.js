@@ -25,8 +25,7 @@ test("calculates the proposal worked example correctly", () => {
     gapLevel: 1,
     severity: "low",
     priority: "low",
-    label: "Low Gap",
-    action: "Minor competency improvement needed"
+    label: "Low Gap"
   });
 });
 

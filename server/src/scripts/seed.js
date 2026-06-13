@@ -15,6 +15,39 @@ import { buildDefaultQuestionBank } from "../services/defaultQuestionBank.js";
 
 const password = "Password123!";
 
+const institutionRecommendationRules = [
+  {
+    priority: "low",
+    recommendationText: "Strengthen the remaining competency areas.",
+    actionItems: [
+      "Review the relevant RTB learning outcomes.",
+      "Complete one targeted practical exercise.",
+      "Document the result in your portfolio."
+    ],
+    resourceType: "practice"
+  },
+  {
+    priority: "medium",
+    recommendationText: "Complete focused practical training.",
+    actionItems: [
+      "Practice the missing tasks in a lab or workplace simulation.",
+      "Build one portfolio project that demonstrates the competency.",
+      "Request feedback from an instructor or workplace supervisor."
+    ],
+    resourceType: "course"
+  },
+  {
+    priority: "high",
+    recommendationText: "Complete an intensive, supervised upskilling plan.",
+    actionItems: [
+      "Join a structured short course or remedial training module.",
+      "Complete at least two supervised practical tasks.",
+      "Submit a portfolio artifact for institution review."
+    ],
+    resourceType: "mentorship"
+  }
+];
+
 const domains = [
   {
     name: "Software Development",
@@ -119,7 +152,9 @@ async function seed() {
     contactEmail: "institution@skills-gap.local",
     contactPhone: "+250780000001",
     address: "Kicukiro District",
-    accountUserId: institutionUser._id
+    accountUserId: institutionUser._id,
+    recommendationRules: institutionRecommendationRules,
+    recommendationRulesUpdatedAt: new Date()
   });
 
   await Graduate.create({

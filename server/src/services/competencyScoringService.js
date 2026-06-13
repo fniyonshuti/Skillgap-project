@@ -35,8 +35,7 @@ export function classifyGap(requiredLevel, achievedLevel) {
     gapLevel: result.gapScore,
     severity: result.severity,
     priority: result.priority,
-    label: result.gapClassification,
-    action: result.recommendation
+    label: result.gapClassification
   };
 }
 

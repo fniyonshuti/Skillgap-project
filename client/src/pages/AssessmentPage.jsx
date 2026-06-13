@@ -92,28 +92,37 @@ export function AssessmentPage() {
   const [activeCompetencyIndex, setActiveCompetencyIndex] = useState(0);
 
   useEffect(() => {
-    api.get("/domains").then(({ data }) => {
-      setDomains(data);
-      if (data[0]?._id) setDomainId(data[0]._id);
-    });
+    api
+      .get("/domains")
+      .then(({ data }) => {
+        setDomains(data);
+        if (data[0]?._id) setDomainId(data[0]._id);
+      })
+      .catch((err) => setError(getErrorMessage(err)));
     api.get("/assessments").then(({ data }) => setHistory(data)).catch(() => setHistory([]));
   }, []);
 
   useEffect(() => {
     if (!domainId) return;
 
-    api.get(`/competencies/assessment?domainId=${domainId}`).then(({ data }) => {
-      setCompetencies(data);
-      setAnswers({});
-      setEvidence({});
-      setEvidenceLinks({});
-      setEvidenceFiles({});
-      setUploadingEvidence({});
-      setRemarks({});
-      setResult(null);
-      setError("");
-      setActiveCompetencyIndex(0);
-    });
+    api
+      .get(`/competencies/assessment?domainId=${domainId}`)
+      .then(({ data }) => {
+        setCompetencies(data);
+        setAnswers({});
+        setEvidence({});
+        setEvidenceLinks({});
+        setEvidenceFiles({});
+        setUploadingEvidence({});
+        setRemarks({});
+        setResult(null);
+        setError("");
+        setActiveCompetencyIndex(0);
+      })
+      .catch((err) => {
+        setCompetencies([]);
+        setError(getErrorMessage(err));
+      });
   }, [domainId]);
 
   const selectedDomain = useMemo(

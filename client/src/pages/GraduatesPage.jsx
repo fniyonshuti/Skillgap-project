@@ -10,7 +10,10 @@ export function GraduatesPage() {
   const [loadingReportId, setLoadingReportId] = useState("");
 
   useEffect(() => {
-    api.get("/graduates").then(({ data }) => setGraduates(data.items));
+    api
+      .get("/graduates")
+      .then(({ data }) => setGraduates(data.items))
+      .catch((err) => setError(getErrorMessage(err)));
   }, []);
 
   async function viewReport(graduate) {

@@ -11,6 +11,7 @@ The system identifies the gap between ICT skills possessed by TVET graduates and
 - RTB competency requirements use Levels `1` to `4`.
 - Graduate competency results are calculated from practical assessment, portfolio, academic record, and self-assessment evidence.
 - RTB competencies are versioned, stored in MongoDB, and managed by administrators.
+- Low, medium, and high recommendation rules are defined only by each institution.
 - Graduate evidence is submitted first, then an institution or administrator can mark it as reviewed.
 - Reports support JSON preview, CSV export, and PDF export.
 - Starter domains are Software Development, Networking, Database Administration, Cybersecurity, and ICT Support.
@@ -42,12 +43,12 @@ The competency gap is calculated as:
 Gap score = RTB required level - graduate achieved level
 ```
 
-| Gap score | Classification | System response |
+| Gap score | Classification | Rule priority |
 | --- | --- | --- |
-| <= 0 | No Gap | Maintain competency level |
-| 1 | Low Gap | Minor competency improvement needed |
-| 2 | Moderate Gap | Additional practical training required |
-| >= 3 | High Gap | Intensive upskilling required |
+| <= 0 | No Gap | None |
+| 1 | Low Gap | Low |
+| 2 | Moderate Gap | Medium |
+| >= 3 | High Gap | High |
 
 All calculations are performed by the backend. The graduate frontend receives question prompts and
 answer labels, but never receives option points and never submits numeric scores. The raw gap is
@@ -65,7 +66,7 @@ Calculate weighted competency score: P(0.40) + PF(0.30) + A(0.20) + S(0.10)
 Determine graduate Level 1-4 and competency status
 Retrieve the required RTB level from the competency standards database
 Calculate Gap Score = Required RTB Level - Graduate Level
-Classify the gap and select the base recommendation
+Classify the gap and select the matching institution-defined recommendation rule
 Generate the competency report
 Save the report in MongoDB
 Display the report to the graduate and authorized administrator/institution
@@ -94,6 +95,7 @@ MongoDB
 - Auth and role-based access control
 - Graduate profile management
 - Institution management
+- Institution-owned recommendation rule management
 - ICT domain and RTB competency management
 - Assessment submission
 - Evidence score calculation and competency mapping
@@ -109,6 +111,7 @@ The implementation uses MongoDB collections with embedded subdocuments where dat
 
 - Assessment items are embedded inside assessments.
 - Gap items are embedded inside gap analyses.
+- Recommendation rules are embedded inside the institution that owns them.
 - Recommendations remain separate documents because they have status tracking over time.
 
 ### Collections
@@ -169,6 +172,7 @@ classDiagram
       code
       district
       accountUserId
+      recommendationRules
     }
 
     class Graduate {
