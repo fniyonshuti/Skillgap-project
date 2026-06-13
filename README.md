@@ -74,7 +74,7 @@ For existing institutions, sign in with the institution account and complete the
 npm run dev
 ```
 
-The client runs on `http://localhost:5173` and the API runs on `http://localhost:5000`.
+The client runs on `http://localhost:5173` and the API runs on `https://skillgap-project.onrender.com`.
 
 ## Demo Accounts
 
