@@ -138,7 +138,8 @@ Install Command: npm ci
 ```
 
 `client/vercel.json` proxies `/api/*` to the Render backend and handles React Router page
-refreshes. Set this Vercel environment variable:
+refreshes. The production build always uses this same-origin proxy. The Vercel environment
+variable can be removed; if it remains configured, use:
 
 ```env
 VITE_API_URL=/api
