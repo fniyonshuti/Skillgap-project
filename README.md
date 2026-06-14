@@ -124,3 +124,35 @@ Publish Directory: dist
 Set `VITE_API_URL` on the static site to the backend URL ending in `/api`, for example
 `https://your-api-service.onrender.com/api`. Add a rewrite from `/*` to `/index.html` so React
 Router routes work when opened directly.
+
+## Vercel Frontend Deployment
+
+Deploy the frontend with these settings:
+
+```text
+Framework Preset: Vite
+Root Directory: client
+Build Command: npm run build
+Output Directory: dist
+Install Command: npm ci
+```
+
+`client/vercel.json` proxies `/api/*` to the Render backend and handles React Router page
+refreshes. Set this Vercel environment variable:
+
+```env
+VITE_API_URL=/api
+```
+
+On the Render backend, set the exact production frontend URL without a trailing slash:
+
+```env
+NODE_ENV=production
+CLIENT_URL=https://your-project.vercel.app
+```
+
+Use `CLIENT_URLS` instead when the application has multiple frontend domains:
+
+```env
+CLIENT_URLS=https://your-project.vercel.app,https://your-custom-domain.com
+```

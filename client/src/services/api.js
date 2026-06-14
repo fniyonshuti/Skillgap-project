@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const API_URL = import.meta.env.VITE_API_URL || "https://skillgap-project.onrender.com/api";
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+
+export const API_URL = (configuredApiUrl || "/api").replace(/\/+$/, "");
 
 export const api = axios.create({
   baseURL: API_URL

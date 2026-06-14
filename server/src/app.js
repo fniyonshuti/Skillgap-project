@@ -20,12 +20,36 @@ import { reportRoutes } from "./routes/reportRoutes.js";
 import { userRoutes } from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";
 
+export function isAllowedOrigin(origin) {
+  if (!origin) {
+    return true;
+  }
+
+  const normalizedOrigin = origin.replace(/\/+$/, "");
+  if (env.clientUrls.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  try {
+    const url = new URL(normalizedOrigin);
+    return (
+      env.nodeEnv === "production" &&
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".vercel.app")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const app = express();
 
 app.use(helmet());
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin));
+    },
     credentials: true
   })
 );
