@@ -325,7 +325,7 @@ Before publishing:
 2. Deploy the Express API to Render or an equivalent Node.js platform.
 3. Configure server secrets only in the platform secret manager.
 4. Deploy the `client` directory to Vercel.
-5. Proxy frontend `/api/*` requests to the deployed backend through `client/vercel.json`.
+5. Proxy frontend `/api/*` requests to the deployed backend through the root `vercel.json`.
 6. Restrict `CLIENT_URLS` to the exact production frontend origins.
 7. Run smoke tests for registration, login, assessment, evidence, reports, authorization, and
    `/health`.
@@ -343,10 +343,10 @@ Health Check Path: /health
 
 ```text
 Framework: Vite
-Root Directory: client
-Build Command: npm run build
-Output Directory: dist
-Install Command: npm ci
+Root Directory: repository root
+Build Command: npm run build --prefix client
+Output Directory: client/dist
+Install Command: npm ci --prefix client
 ```
 
 ## Development Rules
