@@ -265,9 +265,7 @@ role and graduate ownership.
 
 ## Designs
 
-A public Figma file is not currently available. The implemented React interface and these
-screenshots are the design reference.
-
+ Figma design file: https://www.figma.com/design/vsjbkJEG4SrwFaQK9jBG5B/Skill-gap-Analyse-tool?node-id=5-444&t=ckeEWIlck0lA0Ung-1 
 ### Home
 
 ![Home interface](client/src/assets/readme/Homepage.png)
@@ -288,6 +286,10 @@ screenshots are the design reference.
 
 This is a software-only system, so an electrical circuit diagram is not applicable. The architecture
 and data diagrams above are the software equivalents.
+
+## demo video
+
+https://docs.google.com/document/d/1MisCnUkSxGNXajSXpc9D6KD7Fb9dTgcopG_WuA1Ck78/edit?usp=sharing
 
 ## Security
 
