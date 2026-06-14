@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getStoredToken } from "../utils/authStorage.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
 
@@ -13,7 +14,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("skills_gap_token");
+  const token = getStoredToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

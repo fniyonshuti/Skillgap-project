@@ -3406,3 +3406,39 @@ td {
     transition-duration: 0.01ms !important;
   }
 }
+/* Startup recovery remains usable even when the main application cannot render. */
+.startup-error-page {
+  align-items: center;
+  background: #f4f7fb;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.startup-error-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  max-width: 480px;
+  padding: 36px;
+  text-align: center;
+  width: 100%;
+}
+
+.startup-error-card .logo-mark {
+  margin: 0 auto 20px;
+}
+
+.startup-error-card h1 {
+  color: #14213d;
+  font-size: 28px;
+  margin: 0 0 12px;
+}
+
+.startup-error-card p {
+  color: #5b6475;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
