@@ -1,7 +1,13 @@
 :root {
   color-scheme: light;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   background: #f6f7f9;
   color: #172033;
   --surface: #ffffff;
@@ -1047,6 +1053,131 @@ textarea {
   gap: 18px;
 }
 
+.profile-page {
+  gap: 22px;
+}
+
+.profile-heading {
+  align-items: center;
+}
+
+.profile-heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.profile-loading,
+.profile-state {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.85fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.profile-form,
+.profile-summary {
+  height: 100%;
+}
+
+.profile-form-head,
+.profile-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.profile-form-head h3,
+.profile-summary-head h3 {
+  margin: 0;
+}
+
+.profile-form-head p,
+.profile-summary-head p,
+.profile-note p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.profile-fieldset {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 1px);
+  background: #fbfcfe;
+}
+
+.profile-fieldset legend {
+  padding: 0 8px;
+  color: #344054;
+  font-weight: 750;
+}
+
+.profile-fieldset + .profile-fieldset {
+  margin-top: -2px;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-summary {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-summary-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.profile-summary-list div {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+
+.profile-summary-list dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-summary-list dd {
+  margin: 4px 0 0;
+  color: #172033;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.profile-note {
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(37, 99, 235, 0.06),
+    rgba(15, 118, 110, 0.05)
+  );
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.profile-note strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
 .form-grid {
   display: grid;
   gap: 16px;
@@ -1054,6 +1185,18 @@ textarea {
 
 .form-grid.two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.score-pill.pending {
+  color: var(--amber);
+  border-color: rgba(180, 83, 9, 0.2);
+  background: rgba(180, 83, 9, 0.06);
+}
+
+.score-pill.ready {
+  color: var(--green);
+  border-color: rgba(15, 118, 110, 0.2);
+  background: rgba(15, 118, 110, 0.07);
 }
 
 .wide-label {
@@ -1071,7 +1214,10 @@ textarea {
 
 .assessment-overview-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 1.15fr) minmax(220px, 0.75fr) minmax(260px, 0.9fr);
+  grid-template-columns: minmax(260px, 1.15fr) minmax(220px, 0.75fr) minmax(
+      260px,
+      0.9fr
+    );
   gap: 16px;
 }
 
@@ -1801,7 +1947,10 @@ td {
 
 .algorithm-flow {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(140px, 1fr);
+  grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(
+      140px,
+      1fr
+    ) auto minmax(140px, 1fr) auto minmax(140px, 1fr);
   align-items: center;
   gap: 8px;
   padding: 14px;
