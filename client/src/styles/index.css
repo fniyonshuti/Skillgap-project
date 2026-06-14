@@ -6,165 +6,126 @@
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    .profile-page {
-    min-height: calc(100vh - 56px);
-    display: grid;
-    place-items: center;
-    padding: 20px;
-    background:
-      radial-gradient(
-        circle at top left,
-        rgba(37, 99, 235, 0.08),
-        transparent 34%
-      ),
-      radial-gradient(
-        circle at bottom right,
-        rgba(15, 118, 110, 0.08),
-        transparent 28%
-      ),
-      #f6f7f9;
+    "Segoe UI",
+    sans-serif;
+  background: #f6f7f9;
+  color: #172033;
+  --surface: #ffffff;
+  --line: #d9dee8;
+  --muted: #687386;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --green: #0f766e;
+  --amber: #b45309;
+  --red: #b91c1c;
+  --sidebar: #172033;
+  --sidebar-soft: #223049;
+  --radius: 8px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f6f7f9;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@keyframes homeFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
 
-  .profile-modal-shell {
-    align-content: center;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
   }
 
-  .profile-modal-heading {
-    width: min(920px, 100%);
-    margin: 0 auto 14px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroImageSettle {
+  from {
+    transform: scale(1.035);
   }
 
-  .profile-loading,
-  .profile-state {
-    min-height: 140px;
-    display: grid;
-    place-items: center;
-    text-align: center;
+  to {
+    transform: scale(1);
   }
+}
 
-  .profile-modal {
-    width: min(920px, 100%);
-    background: white;
-    border: 1px solid rgba(217, 222, 232, 0.95);
-    border-radius: 14px;
-    box-shadow: 0 24px 80px rgba(23, 32, 51, 0.18);
-    overflow: hidden;
+@keyframes interfaceSpin {
+  to {
+    transform: rotate(360deg);
   }
+}
 
-  .profile-modal-form {
-    margin: 0;
-  }
+.spin {
+  animation: interfaceSpin 900ms linear infinite;
+}
 
-  .profile-modal-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) 260px;
-    gap: 28px;
-    padding: 28px;
-  }
+.screen-center {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
 
-  .profile-form-panel {
-    display: grid;
-    gap: 18px;
-  }
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(120deg, rgba(15, 118, 110, 0.08), rgba(37, 99, 235, 0.08)),
+    #f6f7f9;
+}
 
-  .profile-form-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-  }
+.auth-panel {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: stretch;
+}
 
-  .profile-form-head h3,
-  .profile-photo-title h3 {
-    margin: 0;
-  }
-
-  .profile-form-head p,
-  .profile-photo-meta p,
-  .profile-modal-heading p {
-    margin: 6px 0 0;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-
-  .profile-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
-
-  .profile-actions {
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 4px;
-  }
-
-  .profile-photo-panel {
-    display: grid;
-    align-content: start;
-    justify-items: stretch;
-    gap: 12px;
-    padding-top: 2px;
-  }
-
-  .profile-photo-frame {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #e6eaf1;
-    border: 1px solid var(--line);
-    display: grid;
-    place-items: center;
-  }
-
-  .profile-photo-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .profile-photo-fallback {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-    background:
-      linear-gradient(135deg, rgba(23, 32, 51, 0.92), rgba(35, 48, 73, 0.96)),
-      #172033;
-    color: white;
-  }
-
-  .profile-photo-fallback span {
-    width: 76px;
-    height: 76px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    font-size: 1.7rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-  }
-
-  .profile-upload-button {
-    width: 100%;
-    min-height: 40px;
-  }
-
-  .profile-photo-input {
-    display: none;
-  }
-
-  .profile-remove-button {
-    justify-self: center;
-  }
-
-  .profile-photo-meta {
-    padding-top: 2px;
-  }
+.auth-copy {
+  min-height: 520px;
+  padding: 42px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -175,10 +136,6 @@
 
 .auth-copy h1 {
   margin: 20px 0 12px;
-  .profile-grid .form-grid.two {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   font-size: clamp(2rem, 5vw, 4rem);
   line-height: 1;
   letter-spacing: 0;
@@ -1242,36 +1199,6 @@ textarea {
   background: rgba(15, 118, 110, 0.07);
 }
 
-@media (max-width: 920px) {
-  .profile-modal-heading,
-  .profile-modal {
-    width: 100%;
-  }
-
-  .profile-modal-body {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-photo-panel {
-    max-width: 320px;
-  }
-}
-
-@media (max-width: 640px) {
-  .profile-page {
-    padding: 12px;
-  }
-
-  .profile-modal-body,
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-form-head {
-    flex-direction: column;
-  }
-}
-
 .wide-label {
   max-width: 520px;
 }
@@ -2020,9 +1947,10 @@ td {
 
 .algorithm-flow {
   display: grid;
-  grid-template-columns:
-    minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(140px, 1fr)
-    auto minmax(140px, 1fr) auto minmax(140px, 1fr);
+  grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(
+      140px,
+      1fr
+    ) auto minmax(140px, 1fr) auto minmax(140px, 1fr);
   align-items: center;
   gap: 8px;
   padding: 14px;
