@@ -1,6 +1,18 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+/**
+ * @fileoverview Authentication state and session lifecycle provider.
+ */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { api } from "../services/api.js";
 import {
+  AUTH_EXPIRED_EVENT,
   clearStoredAuth,
   readStoredAuth,
   writeStoredAuth
@@ -15,51 +27,61 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(Boolean(token));
 
+  const clearSession = useCallback(() => {
+    clearStoredAuth();
+    setToken(null);
+    setUser(null);
+    setProfile(null);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
+    window.addEventListener(AUTH_EXPIRED_EVENT, clearSession);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, clearSession);
+  }, [clearSession]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
     async function loadMe() {
       if (!token) {
         setLoading(false);
         return;
       }
 
+      setLoading(true);
       try {
         const { data } = await api.get("/auth/me");
+        if (!isCurrent) return;
         setUser(data.user);
         setProfile(data.profile);
         writeStoredAuth(token, data.user);
-      } catch (_error) {
-        clearStoredAuth();
-        setToken(null);
-        setUser(null);
-        setProfile(null);
+      } catch {
+        if (isCurrent) clearSession();
       } finally {
-        setLoading(false);
+        if (isCurrent) setLoading(false);
       }
     }
 
     loadMe();
-  }, [token]);
+    return () => {
+      isCurrent = false;
+    };
+  }, [token, clearSession]);
 
-  async function login(credentials) {
+  const login = useCallback(async (credentials) => {
     const { data } = await api.post("/auth/login", credentials);
     writeStoredAuth(data.token, data.user);
     setToken(data.token);
     setUser(data.user);
-  }
+  }, []);
 
-  async function register(payload) {
+  const register = useCallback(async (payload) => {
     const { data } = await api.post("/auth/register", payload);
     writeStoredAuth(data.token, data.user);
     setToken(data.token);
     setUser(data.user);
-  }
-
-  function logout() {
-    clearStoredAuth();
-    setToken(null);
-    setUser(null);
-    setProfile(null);
-  }
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -70,15 +92,19 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(token && user),
       login,
       register,
-      logout,
+      logout: clearSession,
       setProfile
     }),
-    [token, user, profile, loading]
+    [token, user, profile, loading, login, register, clearSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider.");
+  }
+  return context;
 }

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import {
   getRecommendationRules,
-  recommendationRuleValidation,
   updateRecommendationRules
 } from "../controllers/recommendationRuleController.js";
 import { authenticate, authorize } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/errorHandler.js";
+import { recommendationRuleValidation } from "../validators/recommendationValidation.js";
 
 export const recommendationRuleRoutes = Router();
 

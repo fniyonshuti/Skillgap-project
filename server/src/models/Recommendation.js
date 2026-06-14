@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Generated learning recommendations and completion status.
+ */
+
 import mongoose from "mongoose";
 
 const recommendationSchema = new mongoose.Schema(
@@ -24,13 +28,15 @@ const recommendationSchema = new mongoose.Schema(
     recommendationText: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 2_000
     },
     rationale: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 2_000
     },
-    actionItems: [{ type: String, trim: true }],
+    actionItems: [{ type: String, trim: true, maxlength: 500 }],
     targetLevel: {
       type: Number,
       min: 1,

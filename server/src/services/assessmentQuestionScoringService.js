@@ -54,6 +54,12 @@ export function sanitizeQuestionBank(competency) {
   };
 }
 
+/**
+ * Resolves private option points and averages them by evidence source.
+ *
+ * The returned response snapshots intentionally omit numeric option scores so
+ * reports and graduate-facing APIs cannot expose the scoring key.
+ */
 export function scoreCompetencyResponses(competency, responses) {
   if (!isQuestionBankReady(competency)) {
     throw new InvalidAssessmentResponsesError(

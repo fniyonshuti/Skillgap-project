@@ -44,21 +44,23 @@ export function ReportsPage() {
 
   async function download(format) {
     setError("");
+    let objectUrl;
 
     try {
       const response = await api.get(`/reports/graduate/${profile._id}?format=${format}`, {
         responseType: "blob"
       });
-      const url = window.URL.createObjectURL(response.data);
+      objectUrl = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
-      link.href = url;
+      link.href = objectUrl;
       link.download = `graduate-skills-gap-report.${format}`;
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(getErrorMessage(err));
+    } finally {
+      if (objectUrl) window.URL.revokeObjectURL(objectUrl);
     }
   }
 

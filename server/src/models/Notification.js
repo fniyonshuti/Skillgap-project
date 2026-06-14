@@ -1,3 +1,7 @@
+/**
+ * @fileoverview User-facing application notification model.
+ */
+
 import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
@@ -10,12 +14,14 @@ const notificationSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 160
     },
     message: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 2_000
     },
     type: {
       type: String,

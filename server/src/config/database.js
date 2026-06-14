@@ -25,6 +25,9 @@ function getDatabaseHelpMessage(error) {
 
 export async function connectDatabase() {
   mongoose.set("strictQuery", true);
+  // Prevent query-selector objects from being interpreted when scalar values
+  // are expected. This adds defense in depth against NoSQL injection.
+  mongoose.set("sanitizeFilter", true);
 
   try {
     await mongoose.connect(env.mongoUri, {

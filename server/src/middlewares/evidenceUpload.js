@@ -1,21 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, extname, resolve } from "node:path";
+import { extname } from "node:path";
 import multer from "multer";
+import { evidenceUploadDirectory } from "../config/storage.js";
 import { ApiError } from "../utils/apiError.js";
 
-const currentDirectory = dirname(fileURLToPath(import.meta.url));
-export const evidenceUploadDirectory = resolve(currentDirectory, "../../uploads/evidence");
 mkdirSync(evidenceUploadDirectory, { recursive: true });
 
-const allowedMimeTypes = new Set([
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-  "image/webp"
+const allowedExtensionsByMimeType = new Map([
+  ["application/pdf", new Set([".pdf"])],
+  ["application/msword", new Set([".doc"])],
+  [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    new Set([".docx"])
+  ],
+  ["image/jpeg", new Set([".jpg", ".jpeg"])],
+  ["image/png", new Set([".png"])],
+  ["image/webp", new Set([".webp"])]
 ]);
 
 const storage = multer.diskStorage({
@@ -33,7 +34,9 @@ const evidenceUpload = multer({
     files: 1
   },
   fileFilter: (_req, file, callback) => {
-    if (!allowedMimeTypes.has(file.mimetype)) {
+    const extension = extname(file.originalname).toLowerCase();
+    const allowedExtensions = allowedExtensionsByMimeType.get(file.mimetype);
+    if (!allowedExtensions?.has(extension)) {
       return callback(
         new ApiError(400, "Evidence must be a PDF, Word document, PNG, JPEG, or WebP file.")
       );

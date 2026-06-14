@@ -1,5 +1,6 @@
 import { Competency } from "../models/Competency.js";
 import { GapAnalysis } from "../models/GapAnalysis.js";
+import { trustedIn } from "../utils/mongoQuery.js";
 import { Graduate } from "../models/Graduate.js";
 import { Institution } from "../models/Institution.js";
 import { Recommendation } from "../models/Recommendation.js";
@@ -22,7 +23,7 @@ function summaryFromScores(readinessScore, highPriorityCount) {
 
 export async function generateGapAnalysis(assessment, engineResults = []) {
   const competencies = await Competency.find({
-    _id: { $in: assessment.items.map((item) => item.competencyId) },
+    _id: trustedIn(assessment.items.map((item) => item.competencyId)),
     isActive: true
   });
 

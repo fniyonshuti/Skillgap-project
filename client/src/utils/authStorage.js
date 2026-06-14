@@ -1,5 +1,10 @@
+/**
+ * @fileoverview Browser persistence and lifecycle events for authentication.
+ */
+
 const TOKEN_KEY = "skills_gap_token";
 const USER_KEY = "skills_gap_user";
+export const AUTH_EXPIRED_EVENT = "skills-gap:auth-expired";
 
 export function clearStoredAuth(storage = window.localStorage) {
   storage.removeItem(TOKEN_KEY);
@@ -39,4 +44,12 @@ export function writeStoredAuth(token, user, storage = window.localStorage) {
 
 export function getStoredToken(storage = window.localStorage) {
   return storage.getItem(TOKEN_KEY);
+}
+
+/**
+ * Clears an invalid session and informs mounted providers in the same tab.
+ */
+export function expireStoredAuth(storage = window.localStorage) {
+  clearStoredAuth(storage);
+  window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
 }

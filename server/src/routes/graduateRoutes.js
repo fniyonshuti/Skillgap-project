@@ -2,12 +2,16 @@ import { Router } from "express";
 import {
   getGraduate,
   getMyGraduateProfile,
-  graduateProfileValidation,
   listGraduates,
   updateMyGraduateProfile
 } from "../controllers/graduateController.js";
 import { authenticate, authorize } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/errorHandler.js";
+import { mongoIdParam } from "../validators/commonValidation.js";
+import {
+  graduateProfileValidation,
+  listGraduatesValidation
+} from "../validators/graduateValidation.js";
 
 export const graduateRoutes = Router();
 
@@ -20,5 +24,17 @@ graduateRoutes.patch(
   validateRequest,
   updateMyGraduateProfile
 );
-graduateRoutes.get("/", authorize("institution", "admin"), listGraduates);
-graduateRoutes.get("/:id", authorize("institution", "admin"), getGraduate);
+graduateRoutes.get(
+  "/",
+  authorize("institution", "admin"),
+  listGraduatesValidation,
+  validateRequest,
+  listGraduates
+);
+graduateRoutes.get(
+  "/:id",
+  authorize("institution", "admin"),
+  mongoIdParam("id", "Graduate"),
+  validateRequest,
+  getGraduate
+);

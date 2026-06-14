@@ -1,46 +1,13 @@
-import { body } from "express-validator";
-import { Institution } from "../models/Institution.js";
-import { RECOMMENDATION_PRIORITIES } from "../services/recommendationService.js";
+/**
+ * @fileoverview Institution-owned recommendation rule configuration.
+ */
+
+import { findInstitutionForUser } from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const resourceTypes = ["course", "practice", "certification", "mentorship"];
-
-export const recommendationRuleValidation = [
-  body("rules")
-    .isArray({ min: 3, max: 3 })
-    .withMessage("Define exactly one low, medium, and high recommendation rule."),
-  body("rules.*.priority")
-    .isIn(RECOMMENDATION_PRIORITIES)
-    .withMessage("Rule priority must be low, medium, or high."),
-  body("rules.*.recommendationText")
-    .trim()
-    .notEmpty()
-    .withMessage("Each rule requires recommendation text."),
-  body("rules.*.actionItems")
-    .isArray({ min: 1 })
-    .withMessage("Each rule requires at least one action item."),
-  body("rules.*.actionItems.*")
-    .trim()
-    .notEmpty()
-    .withMessage("Action items cannot be empty."),
-  body("rules.*.resourceType")
-    .isIn(resourceTypes)
-    .withMessage("Each rule requires a valid resource type."),
-  body("rules").custom((rules) => {
-    const priorities = new Set(rules.map((rule) => rule.priority));
-    if (
-      priorities.size !== RECOMMENDATION_PRIORITIES.length ||
-      RECOMMENDATION_PRIORITIES.some((priority) => !priorities.has(priority))
-    ) {
-      throw new Error("Define exactly one low, medium, and high recommendation rule.");
-    }
-    return true;
-  })
-];
-
 async function getInstitution(userId) {
-  const institution = await Institution.findOne({ accountUserId: userId });
+  const institution = await findInstitutionForUser(userId);
   if (!institution) {
     throw new ApiError(404, "Institution profile was not found.");
   }

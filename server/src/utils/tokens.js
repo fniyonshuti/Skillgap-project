@@ -1,3 +1,7 @@
+/**
+ * @fileoverview JWT creation helpers.
+ */
+
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 
@@ -8,6 +12,9 @@ export function signAccessToken(user) {
       role: user.role
     },
     env.jwtSecret,
-    { expiresIn: env.jwtExpiresIn }
+    {
+      algorithm: "HS256",
+      expiresIn: env.jwtExpiresIn
+    }
   );
 }

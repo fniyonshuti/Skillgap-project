@@ -1,22 +1,28 @@
-import { Graduate } from "../models/Graduate.js";
+/**
+ * @fileoverview Recommendation query and progress-management endpoints.
+ */
+
 import { GapAnalysis } from "../models/GapAnalysis.js";
-import { Institution } from "../models/Institution.js";
 import { Recommendation } from "../models/Recommendation.js";
+import {
+  assertGraduateAccess,
+  findGraduateForUser,
+  getInstitutionGraduateIds
+} from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { trustedIn } from "../utils/mongoQuery.js";
 
 async function resolveGraduateFilter(req) {
   if (req.user.role === "graduate") {
-    const graduate = await Graduate.findOne({ userId: req.user._id });
+    const graduate = await findGraduateForUser(req.user._id);
     if (!graduate) throw new ApiError(404, "Graduate profile was not found.");
     return { graduateId: graduate._id };
   }
 
   if (req.user.role === "institution") {
-    const institution = await Institution.findOne({ accountUserId: req.user._id });
-    if (!institution) throw new ApiError(404, "Institution profile was not found.");
-    const graduateIds = await Graduate.find({ institutionId: institution._id }).distinct("_id");
-    return { graduateId: { $in: graduateIds } };
+    const { graduateIds } = await getInstitutionGraduateIds(req.user._id);
+    return { graduateId: trustedIn(graduateIds) };
   }
 
   return {};
@@ -25,6 +31,8 @@ async function resolveGraduateFilter(req) {
 export const listRecommendations = asyncHandler(async (req, res) => {
   const filter = await resolveGraduateFilter(req);
 
+  // Graduates see the current plan only, while institutions and administrators
+  // can inspect historical recommendations for the graduates they manage.
   if (req.user.role === "graduate") {
     const latestGap = await GapAnalysis.findOne(filter).sort({ createdAt: -1 }).select("_id");
     filter.gapAnalysisId = latestGap?._id || null;
@@ -33,7 +41,6 @@ export const listRecommendations = asyncHandler(async (req, res) => {
   if (req.query.graduateId && req.user.role === "admin") {
     filter.graduateId = req.query.graduateId;
   }
-
   if (req.query.status) filter.status = req.query.status;
 
   const recommendations = await Recommendation.find(filter)
@@ -54,21 +61,11 @@ export const updateRecommendationStatus = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Recommendation was not found.");
   }
 
-  const filter = await resolveGraduateFilter(req);
-  const allowedIds = filter.graduateId?.$in?.map((id) => id.toString());
-  const recommendationGraduateId = recommendation.graduateId.toString();
-
-  if (filter.graduateId && !allowedIds && filter.graduateId.toString() !== recommendationGraduateId) {
-    throw new ApiError(403, "You cannot update this recommendation.");
-  }
-
-  if (allowedIds && !allowedIds.includes(recommendationGraduateId)) {
-    throw new ApiError(403, "You cannot update this recommendation.");
-  }
-
-  if (!["pending", "in_progress", "completed"].includes(req.body.status)) {
-    throw new ApiError(400, "Invalid recommendation status.");
-  }
+  await assertGraduateAccess(
+    req.user,
+    recommendation.graduateId,
+    "You cannot update this recommendation."
+  );
 
   recommendation.status = req.body.status;
   await recommendation.save();

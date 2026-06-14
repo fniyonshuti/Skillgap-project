@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Top-level ICT competency domain model.
+ */
+
 import mongoose from "mongoose";
 
 const ictDomainSchema = new mongoose.Schema(
@@ -6,11 +10,13 @@ const ictDomainSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
+      maxlength: 160
     },
     description: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 1_500
     },
     isActive: {
       type: Boolean,

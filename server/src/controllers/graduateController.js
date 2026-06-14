@@ -1,20 +1,23 @@
-import { body } from "express-validator";
+/**
+ * @fileoverview Graduate self-service and institution-scoped directory endpoints.
+ */
+
 import { Graduate } from "../models/Graduate.js";
 import { Institution } from "../models/Institution.js";
+import { findInstitutionForUser } from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { pickDefined } from "../utils/objects.js";
+import { escapeRegex, parsePagination } from "../utils/query.js";
 
-export const graduateProfileValidation = [
-  body("institutionId").optional({ checkFalsy: true }).isMongoId().withMessage("Invalid institution."),
-  body("graduationYear")
-    .optional({ checkFalsy: true })
-    .isInt({ min: 2000, max: 2100 })
-    .withMessage("Graduation year is invalid.")
-];
-
-async function currentInstitution(userId) {
-  return Institution.findOne({ accountUserId: userId });
-}
+const EDITABLE_GRADUATE_FIELDS = Object.freeze([
+  "institutionId",
+  "registrationNumber",
+  "program",
+  "graduationYear",
+  "phone",
+  "district"
+]);
 
 export const getMyGraduateProfile = asyncHandler(async (req, res) => {
   const profile = await Graduate.findOne({ userId: req.user._id })
@@ -34,18 +37,7 @@ export const updateMyGraduateProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Graduate profile was not found.");
   }
 
-  const allowed = [
-    "institutionId",
-    "registrationNumber",
-    "program",
-    "graduationYear",
-    "phone",
-    "district"
-  ];
-
-  const updates = Object.fromEntries(
-    Object.entries(req.body).filter(([key]) => allowed.includes(key))
-  );
+  const updates = pickDefined(req.body, EDITABLE_GRADUATE_FIELDS);
 
   if (Object.hasOwn(updates, "institutionId")) {
     if (updates.institutionId) {
@@ -76,11 +68,12 @@ export const updateMyGraduateProfile = asyncHandler(async (req, res) => {
 });
 
 export const listGraduates = asyncHandler(async (req, res) => {
-  const { search = "", institutionId, page = 1, limit = 20 } = req.query;
+  const { search = "", institutionId } = req.query;
+  const { page, limit, skip } = parsePagination(req.query);
   const filter = {};
 
   if (req.user.role === "institution") {
-    const institution = await currentInstitution(req.user._id);
+    const institution = await findInstitutionForUser(req.user._id);
     if (!institution) {
       throw new ApiError(404, "Institution profile was not found.");
     }
@@ -90,24 +83,24 @@ export const listGraduates = asyncHandler(async (req, res) => {
   }
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     filter.$or = [
-      { program: { $regex: search, $options: "i" } },
-      { registrationNumber: { $regex: search, $options: "i" } }
+      { program: { $regex: safeSearch, $options: "i" } },
+      { registrationNumber: { $regex: safeSearch, $options: "i" } }
     ];
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
   const [items, total] = await Promise.all([
     Graduate.find(filter)
       .populate("userId", "name email")
       .populate("institutionId")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit)),
+      .limit(limit),
     Graduate.countDocuments(filter)
   ]);
 
-  res.json({ items, total, page: Number(page), limit: Number(limit) });
+  res.json({ items, total, page, limit });
 });
 
 export const getGraduate = asyncHandler(async (req, res) => {
@@ -120,7 +113,7 @@ export const getGraduate = asyncHandler(async (req, res) => {
   }
 
   if (req.user.role === "institution") {
-    const institution = await currentInstitution(req.user._id);
+    const institution = await findInstitutionForUser(req.user._id);
     if (!institution || graduate.institutionId?._id.toString() !== institution._id.toString()) {
       throw new ApiError(403, "You cannot access this graduate profile.");
     }

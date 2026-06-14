@@ -46,6 +46,9 @@ export function validateCompetencyData(evidenceScores) {
   );
 }
 
+/**
+ * Applies the official evidence-source weights and returns a score from 0-100.
+ */
 export function calculateWeightedCompetencyScore(evidenceScores) {
   const validatedScores = validateCompetencyData(evidenceScores);
   const score = Object.entries(EVIDENCE_WEIGHTS).reduce(
@@ -56,6 +59,9 @@ export function calculateWeightedCompetencyScore(evidenceScores) {
   return Number(score.toFixed(1));
 }
 
+/**
+ * Maps a validated percentage score to the implemented RTB competency level.
+ */
 export function determineGraduateCompetencyLevel(competencyScore) {
   const score = validateScore(competencyScore);
   const result = COMPETENCY_LEVELS.find((level) => score >= level.min);
@@ -66,6 +72,10 @@ export function determineGraduateCompetencyLevel(competencyScore) {
   };
 }
 
+/**
+ * Compares required and achieved levels. Negative gaps are retained to show
+ * that the graduate exceeds the requirement.
+ */
 export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
   const requiredLevel = validateRequiredLevel(requiredRtbLevel);
   const achievedLevel = validateRequiredLevel(graduateLevel);
@@ -106,6 +116,9 @@ export function classifySkillsGap(requiredRtbLevel, graduateLevel) {
   };
 }
 
+/**
+ * Produces the immutable result consumed by gap analysis and reporting.
+ */
 export function runSkillsGapAnalysis({
   evidenceScores,
   requiredRtbLevel,

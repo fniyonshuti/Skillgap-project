@@ -4,12 +4,17 @@ import { GapAnalysis } from "../models/GapAnalysis.js";
 import { Graduate } from "../models/Graduate.js";
 import { Institution } from "../models/Institution.js";
 import { User } from "../models/User.js";
+import {
+  findGraduateForUser,
+  getInstitutionGraduateIds
+} from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { trustedIn } from "../utils/mongoQuery.js";
 
 export const getDashboardAnalytics = asyncHandler(async (req, res) => {
   if (req.user.role === "graduate") {
-    const graduate = await Graduate.findOne({ userId: req.user._id });
+    const graduate = await findGraduateForUser(req.user._id);
     if (!graduate) throw new ApiError(404, "Graduate profile was not found.");
 
     const [assessmentCount, latestGap] = await Promise.all([
@@ -26,13 +31,11 @@ export const getDashboardAnalytics = asyncHandler(async (req, res) => {
   }
 
   if (req.user.role === "institution") {
-    const institution = await Institution.findOne({ accountUserId: req.user._id });
-    if (!institution) throw new ApiError(404, "Institution profile was not found.");
-    const graduateIds = await Graduate.find({ institutionId: institution._id }).distinct("_id");
+    const { graduateIds } = await getInstitutionGraduateIds(req.user._id);
 
     const [graduateCount, assessmentCount, gapStats] = await Promise.all([
       graduateIds.length,
-      Assessment.countDocuments({ graduateId: { $in: graduateIds } }),
+      Assessment.countDocuments({ graduateId: trustedIn(graduateIds) }),
       GapAnalysis.aggregate([
         { $match: { graduateId: { $in: graduateIds } } },
         { $group: { _id: null, avgReadiness: { $avg: "$readinessScore" }, avgGap: { $avg: "$overallGapScore" } } }

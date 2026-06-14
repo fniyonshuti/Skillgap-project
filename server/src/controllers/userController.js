@@ -1,45 +1,66 @@
-import { body } from "express-validator";
+/**
+ * @fileoverview Administrator-facing user query and account-state endpoints.
+ */
+
 import { User } from "../models/User.js";
+import { serializeUser } from "../serializers/userSerializer.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { pickDefined } from "../utils/objects.js";
+import { escapeRegex, parsePagination } from "../utils/query.js";
 
-export const updateUserValidation = [
-  body("role").optional().isIn(["graduate", "institution", "admin"]).withMessage("Invalid role."),
-  body("status").optional().isIn(["active", "suspended"]).withMessage("Invalid status.")
-];
+const EDITABLE_USER_FIELDS = Object.freeze(["role", "status"]);
 
 export const listUsers = asyncHandler(async (req, res) => {
-  const { role, status, search = "", page = 1, limit = 20 } = req.query;
+  const { role, status, search = "" } = req.query;
+  const { page, limit, skip } = parsePagination(req.query);
   const filter = {};
 
   if (role) filter.role = role;
   if (status) filter.status = status;
   if (search) {
+    const safeSearch = escapeRegex(search);
     filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } }
+      { name: { $regex: safeSearch, $options: "i" } },
+      { email: { $regex: safeSearch, $options: "i" } }
     ];
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
-  const [items, total] = await Promise.all([
-    User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+  const [users, total] = await Promise.all([
+    User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
     User.countDocuments(filter)
   ]);
 
-  res.json({ items, total, page: Number(page), limit: Number(limit) });
+  res.json({
+    items: users.map(serializeUser),
+    total,
+    page,
+    limit
+  });
 });
 
 export const updateUser = asyncHandler(async (req, res) => {
-  const updates = {};
+  const updates = pickDefined(req.body, EDITABLE_USER_FIELDS);
+  const isUpdatingSelf = req.params.id === req.user._id.toString();
 
-  if (req.body.role) updates.role = req.body.role;
-  if (req.body.status) updates.status = req.body.status;
+  if (
+    isUpdatingSelf &&
+    (updates.status === "suspended" ||
+      (updates.role && updates.role !== req.user.role))
+  ) {
+    throw new ApiError(
+      409,
+      "Administrators cannot suspend their own account or remove their own admin role."
+    );
+  }
 
-  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+  const user = await User.findByIdAndUpdate(req.params.id, updates, {
+    new: true,
+    runValidators: true
+  });
   if (!user) {
     throw new ApiError(404, "User was not found.");
   }
 
-  res.json(user);
+  res.json(serializeUser(user));
 });

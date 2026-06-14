@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Role-aware account registration form.
+ */
+
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -124,6 +128,8 @@ export function RegisterPage() {
             Email
             <input
               type="email"
+              autoComplete="email"
+              maxLength={254}
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
               required
@@ -133,11 +139,16 @@ export function RegisterPage() {
             Password
             <input
               type="password"
+              autoComplete="new-password"
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
               minLength={8}
+              maxLength={128}
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}"
+              title="Use 8-128 characters with uppercase, lowercase, and a number."
               required
             />
+            <small>Use 8-128 characters with uppercase, lowercase, and a number.</small>
           </label>
 
           {form.role === "graduate" ? (
@@ -213,6 +224,8 @@ export function RegisterPage() {
               Admin setup code
               <input
                 type="password"
+                autoComplete="off"
+                maxLength={256}
                 value={form.adminSetupCode}
                 onChange={(event) => setForm({ ...form, adminSetupCode: event.target.value })}
                 required={form.role === "admin"}

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview RTB competency standard and assessment question-bank model.
+ */
+
 import mongoose from "mongoose";
 
 const assessmentOptionSchema = new mongoose.Schema(
@@ -5,7 +9,8 @@ const assessmentOptionSchema = new mongoose.Schema(
     label: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 500
     },
     score: {
       type: Number,
@@ -27,7 +32,8 @@ const assessmentQuestionSchema = new mongoose.Schema(
     prompt: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 2_000
     },
     options: {
       type: [assessmentOptionSchema],
@@ -59,15 +65,18 @@ const competencySchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 200
     },
     description: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 2_000
     },
     category: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 120
     },
     requiredLevel: {
       type: Number,
@@ -78,13 +87,15 @@ const competencySchema = new mongoose.Schema(
     rtbReference: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 120
     },
-    evidenceExamples: [String],
+    evidenceExamples: [{ type: String, trim: true, maxlength: 500 }],
     version: {
       type: String,
       trim: true,
-      default: "1.0"
+      default: "1.0",
+      maxlength: 40
     },
     effectiveDate: {
       type: Date,

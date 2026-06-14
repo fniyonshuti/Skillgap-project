@@ -1,8 +1,7 @@
 import { GapAnalysis } from "../models/GapAnalysis.js";
-import { Graduate } from "../models/Graduate.js";
-import { Institution } from "../models/Institution.js";
 import { Recommendation } from "../models/Recommendation.js";
 import { Report } from "../models/Report.js";
+import { assertGraduateAccess } from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
@@ -12,36 +11,16 @@ import {
 } from "../services/reportService.js";
 
 async function resolveGraduateForReport(req) {
-  const graduateId = req.params.graduateId;
-
-  if (req.user.role === "graduate") {
-    const ownGraduate = await Graduate.findOne({ userId: req.user._id });
-    if (!ownGraduate || ownGraduate._id.toString() !== graduateId) {
-      throw new ApiError(403, "You cannot access this report.");
-    }
-  }
-
-  const graduate = await Graduate.findById(graduateId).populate("userId", "name email");
-  if (!graduate) {
-    throw new ApiError(404, "Graduate was not found.");
-  }
-
-  if (req.user.role === "institution") {
-    const institution = await Institution.findOne({ accountUserId: req.user._id });
-    if (!institution || graduate.institutionId?.toString() !== institution._id.toString()) {
-      throw new ApiError(403, "You cannot access this report.");
-    }
-  }
-
-  return graduate;
+  const graduate = await assertGraduateAccess(
+    req.user,
+    req.params.graduateId,
+    "You cannot access this report."
+  );
+  return graduate.populate("userId", "name email");
 }
 
 export const generateGraduateReport = asyncHandler(async (req, res) => {
   const format = req.query.format || "json";
-  if (!["json", "csv", "pdf"].includes(format)) {
-    throw new ApiError(400, "Report format must be json, csv, or pdf.");
-  }
-
   const graduate = await resolveGraduateForReport(req);
   const gapAnalysis = await GapAnalysis.findOne({ graduateId: graduate._id })
     .populate("domainId")

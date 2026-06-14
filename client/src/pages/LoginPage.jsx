@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Public sign-in page for all application roles.
+ */
+
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -6,7 +10,7 @@ import { getErrorMessage } from "../services/api.js";
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "graduate@skills-gap.local", password: "Password123!" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -45,6 +49,8 @@ export function LoginPage() {
             Email
             <input
               type="email"
+              autoComplete="email"
+              maxLength={254}
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
               required
@@ -54,6 +60,8 @@ export function LoginPage() {
             Password
             <input
               type="password"
+              autoComplete="current-password"
+              maxLength={128}
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
               required

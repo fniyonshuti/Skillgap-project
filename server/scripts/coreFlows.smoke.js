@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { readFile, unlink } from "node:fs/promises";
 import net from "node:net";
@@ -22,6 +23,9 @@ const smokeMongoUri = parsedMongoUri.toString();
 const uploadDirectory = resolve(serverRoot, "uploads/evidence");
 
 let serverProcess;
+const smokePassword = `${randomBytes(18).toString("base64url")}Aa1`;
+const smokeJwtSecret = randomBytes(32).toString("hex");
+const smokeAdminRegistrationCode = randomBytes(24).toString("base64url");
 
 function getFreePort() {
   return new Promise((resolvePort, reject) => {
@@ -135,7 +139,7 @@ function buildQuestionBank() {
 
 async function login(baseUrl, email) {
   const response = await request(baseUrl, "POST", "/api/auth/login", {
-    body: { email, password: "Password123!" }
+    body: { email, password: smokePassword }
   });
   assert.ok(response.data.token);
   return response.data.token;
@@ -156,7 +160,7 @@ async function runCoreFlows(baseUrl) {
       role: "graduate",
       name: "Smoke Graduate",
       email: "smoke.graduate@example.test",
-      password: "Password123!",
+      password: smokePassword,
       program: "ICT",
       graduationYear: 2026
     },
@@ -167,7 +171,7 @@ async function runCoreFlows(baseUrl) {
       role: "admin",
       name: "Blocked Admin",
       email: "blocked.admin@example.test",
-      password: "Password123!",
+      password: smokePassword,
       adminSetupCode: "incorrect"
     },
     expected: 403
@@ -303,9 +307,13 @@ async function runCoreFlows(baseUrl) {
     )
   );
 
-  const imageBuffer = await readFile(resolve(serverRoot, "../client/src/assets/home-hero.png"));
+  const imageBuffer = await readFile(resolve(serverRoot, "../client/src/assets/home-hero.webp"));
   const evidenceForm = new FormData();
-  evidenceForm.append("file", new Blob([imageBuffer], { type: "image/png" }), "smoke-evidence.png");
+  evidenceForm.append(
+    "file",
+    new Blob([imageBuffer], { type: "image/webp" }),
+    "smoke-evidence.webp"
+  );
   const evidenceResponse = await request(baseUrl, "POST", "/api/evidence/upload", {
     token: graduateToken,
     form: evidenceForm,
@@ -512,7 +520,10 @@ const childEnvironment = {
   MONGO_URI: smokeMongoUri,
   PORT: String(port),
   CLIENT_URL: "http://localhost:5173",
-  NODE_ENV: "test"
+  NODE_ENV: "test",
+  JWT_SECRET: smokeJwtSecret,
+  ADMIN_REGISTRATION_CODE: smokeAdminRegistrationCode,
+  SEED_DEFAULT_PASSWORD: smokePassword
 };
 const serverLogs = { stdout: "", stderr: "" };
 

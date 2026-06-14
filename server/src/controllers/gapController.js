@@ -1,27 +1,15 @@
+/**
+ * @fileoverview Read-only gap-analysis endpoints with graduate ownership checks.
+ */
+
 import { GapAnalysis } from "../models/GapAnalysis.js";
-import { Graduate } from "../models/Graduate.js";
-import { Institution } from "../models/Institution.js";
+import { assertGraduateAccess } from "../services/accessControlService.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-async function assertGraduateAccess(user, graduateId) {
-  const graduate = await Graduate.findById(graduateId);
-  if (!graduate) throw new ApiError(404, "Graduate was not found.");
-
-  if (user.role === "admin") return graduate;
-  if (user.role === "graduate" && graduate.userId.toString() === user._id.toString()) return graduate;
-
-  if (user.role === "institution") {
-    const institution = await Institution.findOne({ accountUserId: user._id });
-    if (institution && graduate.institutionId?.toString() === institution._id.toString()) return graduate;
-  }
-
-  throw new ApiError(403, "You cannot access this gap analysis.");
-}
-
 export const getLatestGapAnalysis = asyncHandler(async (req, res) => {
   const graduateId = req.params.graduateId;
-  await assertGraduateAccess(req.user, graduateId);
+  await assertGraduateAccess(req.user, graduateId, "You cannot access this gap analysis.");
 
   const gapAnalysis = await GapAnalysis.findOne({ graduateId })
     .populate("domainId")
@@ -44,6 +32,10 @@ export const getGapAnalysisByAssessment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Gap analysis was not found.");
   }
 
-  await assertGraduateAccess(req.user, gapAnalysis.graduateId);
+  await assertGraduateAccess(
+    req.user,
+    gapAnalysis.graduateId,
+    "You cannot access this gap analysis."
+  );
   res.json(gapAnalysis);
 });

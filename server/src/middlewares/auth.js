@@ -1,3 +1,7 @@
+/**
+ * @fileoverview JWT authentication and role-based authorization middleware.
+ */
+
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { User } from "../models/User.js";
@@ -12,8 +16,25 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
     throw new ApiError(401, "Authentication token is required.");
   }
 
-  const payload = jwt.verify(token, env.jwtSecret);
-  const user = await User.findById(payload.sub).select("+passwordHash");
+  let payload;
+  try {
+    payload = jwt.verify(token, env.jwtSecret, {
+      algorithms: ["HS256"]
+    });
+  } catch (error) {
+    throw new ApiError(401, "Authentication token is invalid or expired.", {
+      code: "INVALID_AUTH_TOKEN",
+      cause: error
+    });
+  }
+
+  if (!payload.sub) {
+    throw new ApiError(401, "Authentication token is invalid.", {
+      code: "INVALID_AUTH_TOKEN"
+    });
+  }
+
+  const user = await User.findById(payload.sub);
 
   if (!user || user.status !== "active") {
     throw new ApiError(401, "Invalid or inactive user account.");
@@ -23,6 +44,12 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
   next();
 });
 
+/**
+ * Restricts a route to one or more authenticated roles.
+ *
+ * @param {...string} roles - Allowed user roles.
+ * @returns {import("express").RequestHandler}
+ */
 export function authorize(...roles) {
   return (req, _res, next) => {
     if (!roles.includes(req.user.role)) {

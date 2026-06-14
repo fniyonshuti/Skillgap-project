@@ -2,12 +2,14 @@ import { Router } from "express";
 import {
   getMe,
   login,
-  loginValidation,
-  register,
-  registerValidation
+  register
 } from "../controllers/authController.js";
 import { authenticate } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/errorHandler.js";
+import {
+  loginValidation,
+  registerValidation
+} from "../validators/authValidation.js";
 
 export const authRoutes = Router();
 

@@ -13,7 +13,17 @@ import { Report } from "../models/Report.js";
 import { User } from "../models/User.js";
 import { buildDefaultQuestionBank } from "../services/defaultQuestionBank.js";
 
-const password = "Password123!";
+const seedPassword = process.env.SEED_DEFAULT_PASSWORD;
+
+if (
+  !seedPassword ||
+  seedPassword.length < 12 ||
+  !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(seedPassword)
+) {
+  throw new Error(
+    "SEED_DEFAULT_PASSWORD must contain at least 12 characters, uppercase, lowercase, and a number."
+  );
+}
 
 const institutionRecommendationRules = [
   {
@@ -128,19 +138,19 @@ async function seed() {
     {
       name: "System Administrator",
       email: "admin@skills-gap.local",
-      passwordHash: password,
+      passwordHash: seedPassword,
       role: "admin"
     },
     {
       name: "Kicukiro TVET Institution",
       email: "institution@skills-gap.local",
-      passwordHash: password,
+      passwordHash: seedPassword,
       role: "institution"
     },
     {
       name: "Demo Graduate",
       email: "graduate@skills-gap.local",
-      passwordHash: password,
+      passwordHash: seedPassword,
       role: "graduate"
     }
   ]);
@@ -194,9 +204,11 @@ async function seed() {
   });
 
   console.log("Seed completed.");
-  console.log("Admin:", adminUser.email, "/", password);
-  console.log("Institution:", institutionUser.email, "/", password);
-  console.log("Graduate:", graduateUser.email, "/", password);
+  console.log("Development users created:", [
+    adminUser.email,
+    institutionUser.email,
+    graduateUser.email
+  ]);
 
   await mongoose.disconnect();
 }

@@ -7,7 +7,7 @@ import {
   Users
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "../assets/home-hero.png";
+import heroImage from "../assets/home-hero.webp";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const roleCards = [

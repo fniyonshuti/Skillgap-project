@@ -1,15 +1,14 @@
-import { body } from "express-validator";
+/**
+ * @fileoverview Public institution discovery and administrator CRUD endpoints.
+ */
+
+import { Graduate } from "../models/Graduate.js";
 import { Institution } from "../models/Institution.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { pickDefined } from "../utils/objects.js";
 
-export const institutionValidation = [
-  body("name").trim().notEmpty().withMessage("Institution name is required."),
-  body("code").trim().notEmpty().withMessage("Institution code is required."),
-  body("contactEmail").optional({ checkFalsy: true }).isEmail().withMessage("Invalid contact email.")
-];
-
-const editableInstitutionFields = [
+const EDITABLE_INSTITUTION_FIELDS = Object.freeze([
   "name",
   "code",
   "district",
@@ -17,30 +16,26 @@ const editableInstitutionFields = [
   "contactPhone",
   "address",
   "accountUserId"
-];
-
-function institutionDetails(payload) {
-  return Object.fromEntries(
-    Object.entries(payload).filter(([key]) => editableInstitutionFields.includes(key))
-  );
-}
+]);
 
 export const listInstitutions = asyncHandler(async (_req, res) => {
-  const items = await Institution.find()
-    .select("-recommendationRules -recommendationRulesUpdatedAt")
-    .sort({ name: 1 });
-  res.json(items);
+  // Registration only needs selection metadata. Internal account links and
+  // contact details must not be exposed by this public endpoint.
+  const institutions = await Institution.find({}).select("_id name code district").sort({ name: 1 });
+  res.json(institutions);
 });
 
 export const createInstitution = asyncHandler(async (req, res) => {
-  const institution = await Institution.create(institutionDetails(req.body));
+  const institution = await Institution.create(
+    pickDefined(req.body, EDITABLE_INSTITUTION_FIELDS)
+  );
   res.status(201).json(institution);
 });
 
 export const updateInstitution = asyncHandler(async (req, res) => {
   const institution = await Institution.findByIdAndUpdate(
     req.params.id,
-    institutionDetails(req.body),
+    pickDefined(req.body, EDITABLE_INSTITUTION_FIELDS),
     {
       new: true,
       runValidators: true
@@ -55,10 +50,21 @@ export const updateInstitution = asyncHandler(async (req, res) => {
 });
 
 export const deleteInstitution = asyncHandler(async (req, res) => {
-  const institution = await Institution.findByIdAndDelete(req.params.id);
+  const institution = await Institution.findById(req.params.id);
   if (!institution) {
     throw new ApiError(404, "Institution was not found.");
   }
 
+  const linkedGraduateCount = await Graduate.countDocuments({
+    institutionId: institution._id
+  });
+  if (linkedGraduateCount > 0 || institution.accountUserId) {
+    throw new ApiError(
+      409,
+      "This institution is linked to an account or graduates and cannot be deleted."
+    );
+  }
+
+  await Institution.deleteOne({ _id: institution._id });
   res.status(204).send();
 });

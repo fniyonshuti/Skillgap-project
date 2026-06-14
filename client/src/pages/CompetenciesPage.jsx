@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Archive,
   BookOpenCheck,
-  Building2,
   FileBadge2,
   ListChecks,
   Pencil,
@@ -11,88 +9,23 @@ import {
   ShieldCheck,
   Trash2
 } from "lucide-react";
+import { DomainManagementPanel } from "../features/competencies/components/DomainManagementPanel.jsx";
+import { StandardsRegistry } from "../features/competencies/components/StandardsRegistry.jsx";
+import {
+  COMPETENCY_LEVEL_LABELS,
+  createAssessmentQuestion,
+  createEmptyCompetencyForm,
+  createQuestionBank,
+  isQuestionBankReady,
+  QUESTION_SOURCES
+} from "../features/competencies/competencyForm.js";
 import { api, getErrorMessage } from "../services/api.js";
-
-const questionSources = {
-  practical: { label: "Practical assessment", weight: 40 },
-  portfolio: { label: "Portfolio evidence", weight: 30 },
-  academic: { label: "Academic record", weight: 20 },
-  selfAssessment: { label: "Self-assessment", weight: 10 }
-};
-
-const starterOptions = {
-  practical: [
-    ["No demonstrated practical task", 0],
-    ["Basic task completed with continuous guidance", 40],
-    ["Standard task completed independently", 70],
-    ["Complex task completed independently and verified", 100]
-  ],
-  portfolio: [
-    ["No portfolio artifact", 0],
-    ["Incomplete or unverified artifact", 40],
-    ["Complete artifact demonstrating the outcome", 70],
-    ["Multiple verified artifacts with feedback", 100]
-  ],
-  academic: [
-    ["No relevant academic record", 0],
-    ["Result below the pass requirement", 30],
-    ["Passed relevant module with supporting record", 60],
-    ["Strong verified result in the relevant module", 90]
-  ],
-  selfAssessment: [
-    ["Cannot yet explain or perform the competency", 0],
-    ["Understands concepts but needs guidance", 40],
-    ["Performs routine tasks independently", 70],
-    ["Solves complex tasks and can guide others", 100]
-  ]
-};
-
-function makeQuestion(source, order, title = "this competency") {
-  return {
-    source,
-    prompt: `Which statement best describes your verified ${questionSources[
-      source
-    ].label.toLowerCase()} for "${title || "this competency"}"?`,
-    order,
-    isActive: true,
-    options: starterOptions[source].map(([label, score]) => ({ label, score }))
-  };
-}
-
-function makeQuestionBank(title) {
-  return Object.keys(questionSources).map((source, index) =>
-    makeQuestion(source, index, title)
-  );
-}
-
-function createEmptyForm(domainId = "") {
-  return {
-    domainId,
-    title: "",
-    category: "programming",
-    requiredLevel: 3,
-    rtbReference: "",
-    version: "1.0",
-    effectiveDate: new Date().toISOString().slice(0, 10),
-    standardStatus: "active",
-    description: "",
-    evidenceExamplesText: "",
-    assessmentQuestions: makeQuestionBank("")
-  };
-}
-
-const levelLabels = {
-  1: "Not Yet Competent",
-  2: "Partially Competent",
-  3: "Competent",
-  4: "Highly Competent"
-};
 
 export function CompetenciesPage() {
   const [domains, setDomains] = useState([]);
   const [competencies, setCompetencies] = useState([]);
   const [domainForm, setDomainForm] = useState({ name: "", description: "" });
-  const [form, setForm] = useState(createEmptyForm());
+  const [form, setForm] = useState(createEmptyCompetencyForm());
   const [editingId, setEditingId] = useState("");
   const [error, setError] = useState("");
   const [domainError, setDomainError] = useState("");
@@ -122,21 +55,16 @@ export function CompetenciesPage() {
     () => ({
       total: competencies.length,
       domains: new Set(competencies.map((item) => item.domainId?._id)).size,
-      ready: competencies.filter((item) => {
-        const sources = new Set(
-          (item.assessmentQuestions || [])
-            .filter((question) => question.isActive !== false)
-            .map((question) => question.source)
-        );
-        return Object.keys(questionSources).every((source) => sources.has(source));
-      }).length
+      ready: competencies.filter((item) =>
+        isQuestionBankReady(item.assessmentQuestions)
+      ).length
     }),
     [competencies]
   );
 
   function resetForm(domainId = form.domainId) {
     setEditingId("");
-    setForm(createEmptyForm(domainId));
+    setForm(createEmptyCompetencyForm(domainId));
     setError("");
   }
 
@@ -161,7 +89,7 @@ export function CompetenciesPage() {
               ...question,
               options: question.options.map((option) => ({ ...option }))
             }))
-          : makeQuestionBank(competency.title)
+          : createQuestionBank(competency.title)
     });
     setMessage("");
     setError("");
@@ -269,7 +197,11 @@ export function CompetenciesPage() {
       ...current,
       assessmentQuestions: [
         ...current.assessmentQuestions,
-        makeQuestion(source, current.assessmentQuestions.length, current.title)
+        createAssessmentQuestion(
+          source,
+          current.assessmentQuestions.length,
+          current.title
+        )
       ]
     }));
   }
@@ -280,7 +212,7 @@ export function CompetenciesPage() {
       (item) => item.source === question.source && item.isActive !== false
     ).length;
     if (sourceCount <= 1) {
-      setError(`Keep at least one ${questionSources[question.source].label} question.`);
+      setError(`Keep at least one ${QUESTION_SOURCES[question.source].label} question.`);
       return;
     }
 
@@ -329,58 +261,15 @@ export function CompetenciesPage() {
         </div>
       </div>
 
-      <section className="panel form-panel domain-management-panel">
-        <div className="section-heading compact-heading">
-          <div className="heading-with-icon">
-            <Building2 size={22} />
-            <div>
-              <h3>ICT Occupational Domains</h3>
-              <p>Create a domain before registering its competency standards.</p>
-            </div>
-          </div>
-        </div>
-
-        {domainError && <div className="alert error">{domainError}</div>}
-
-        <form className="form-grid domain-form-grid" onSubmit={handleDomainSubmit}>
-          <label>
-            Domain name
-            <input
-              value={domainForm.name}
-              onChange={(event) => setDomainForm({ ...domainForm, name: event.target.value })}
-              placeholder="Example: Software Development"
-              required
-            />
-          </label>
-          <label>
-            Scope and description
-            <input
-              value={domainForm.description}
-              onChange={(event) => setDomainForm({ ...domainForm, description: event.target.value })}
-              placeholder="Programming, testing, deployment, and delivery practices"
-              required
-            />
-          </label>
-          <button className="secondary-button fit button-with-icon" type="submit">
-            <Plus size={17} />
-            Add domain
-          </button>
-        </form>
-
-        <div className="domain-chip-list" aria-label="Available ICT domains">
-          {domains.map((domain) => (
-            <button
-              key={domain._id}
-              type="button"
-              className={form.domainId === domain._id ? "active" : ""}
-              onClick={() => setForm({ ...form, domainId: domain._id })}
-            >
-              {domain.name}
-            </button>
-          ))}
-          {!domains.length && <p className="muted">No ICT domains have been registered.</p>}
-        </div>
-      </section>
+      <DomainManagementPanel
+        domains={domains}
+        selectedDomainId={form.domainId}
+        domainForm={domainForm}
+        domainError={domainError}
+        onDomainFormChange={setDomainForm}
+        onDomainSubmit={handleDomainSubmit}
+        onDomainSelect={(domainId) => setForm({ ...form, domainId })}
+      />
 
       <form className="panel form-panel standard-editor" onSubmit={handleSubmit}>
         <div className="section-heading compact-heading">
@@ -456,7 +345,7 @@ export function CompetenciesPage() {
               value={form.requiredLevel}
               onChange={(event) => setForm({ ...form, requiredLevel: Number(event.target.value) })}
             >
-              {Object.entries(levelLabels).map(([level, label]) => (
+              {Object.entries(COMPETENCY_LEVEL_LABELS).map(([level, label]) => (
                 <option key={level} value={level}>
                   Level {level} - {label}
                 </option>
@@ -524,7 +413,7 @@ export function CompetenciesPage() {
               onClick={() =>
                 setForm((current) => ({
                   ...current,
-                  assessmentQuestions: makeQuestionBank(current.title)
+                  assessmentQuestions: createQuestionBank(current.title)
                 }))
               }
             >
@@ -534,7 +423,7 @@ export function CompetenciesPage() {
           </div>
 
           <div className="question-source-summary">
-            {Object.entries(questionSources).map(([key, source]) => (
+            {Object.entries(QUESTION_SOURCES).map(([key, source]) => (
               <span key={key}>
                 <strong>{source.weight}%</strong>
                 {source.label}
@@ -556,8 +445,8 @@ export function CompetenciesPage() {
                 <header>
                   <span>{questionIndex + 1}</span>
                   <div>
-                    <strong>{questionSources[question.source]?.label}</strong>
-                    <small>{questionSources[question.source]?.weight}% source weight</small>
+                    <strong>{QUESTION_SOURCES[question.source]?.label}</strong>
+                    <small>{QUESTION_SOURCES[question.source]?.weight}% source weight</small>
                   </div>
                   <button
                     type="button"
@@ -578,7 +467,7 @@ export function CompetenciesPage() {
                         updateQuestion(questionIndex, "source", event.target.value)
                       }
                     >
-                      {Object.entries(questionSources).map(([key, source]) => (
+                      {Object.entries(QUESTION_SOURCES).map(([key, source]) => (
                         <option key={key} value={key}>
                           {source.label} ({source.weight}%)
                         </option>
@@ -664,89 +553,11 @@ export function CompetenciesPage() {
         </div>
       </form>
 
-      <section className="panel standards-registry">
-        <div className="section-heading compact-heading">
-          <div>
-            <h3>Active Standards Registry</h3>
-            <p>Review the references currently available to the assessment engine.</p>
-          </div>
-        </div>
-        <div className="table-panel">
-          <table>
-            <thead>
-              <tr>
-                <th>RTB reference</th>
-                <th>Competency</th>
-                <th>Domain</th>
-                <th>Requirement</th>
-                <th>Version</th>
-                <th>Status</th>
-                <th>Question bank</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {competencies.map((competency) => (
-                <tr key={competency._id}>
-                  <td>
-                    <strong>{competency.rtbReference}</strong>
-                  </td>
-                  <td>
-                    <strong>{competency.title}</strong>
-                    <small className="table-subtext">{competency.category}</small>
-                  </td>
-                  <td>{competency.domainId?.name}</td>
-                  <td>
-                    Level {competency.requiredLevel}
-                    <small className="table-subtext">{levelLabels[competency.requiredLevel]}</small>
-                  </td>
-                  <td>{competency.version || "1.0"}</td>
-                  <td>
-                    <span className="tag tag-none">{competency.standardStatus || "active"}</span>
-                  </td>
-                  <td>
-                    <strong>{competency.assessmentQuestions?.length || 0} questions</strong>
-                    <small className="table-subtext">
-                      {Object.keys(questionSources).every((source) =>
-                        (competency.assessmentQuestions || []).some(
-                          (question) => question.source === source
-                        )
-                      )
-                        ? "Ready for assessment"
-                        : "Needs configuration"}
-                    </small>
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      <button
-                        className="text-button button-with-icon"
-                        type="button"
-                        onClick={() => editStandard(competency)}
-                      >
-                        <Pencil size={15} />
-                        Edit
-                      </button>
-                      <button
-                        className="text-button danger button-with-icon"
-                        type="button"
-                        onClick={() => archive(competency)}
-                      >
-                        <Archive size={15} />
-                        Archive
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!competencies.length && (
-                <tr>
-                  <td colSpan="8">No competency standards have been registered.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <StandardsRegistry
+        competencies={competencies}
+        onEdit={editStandard}
+        onArchive={archive}
+      />
     </div>
   );
 }

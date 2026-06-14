@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "seed": "node src/scripts/seed.js",
     "migrate:question-banks": "node src/scripts/migrateQuestionBanks.js",
-    "lint": "node --check src/server.js",
+    "lint": "node scripts/check.mjs",
     "test": "node --test",
     "test:core": "node scripts/coreFlows.smoke.js"
   },

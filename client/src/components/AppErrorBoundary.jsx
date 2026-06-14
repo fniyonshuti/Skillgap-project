@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Last-resort UI boundary for unrecoverable render failures.
+ */
+
 import { Component } from "react";
 import { clearStoredAuth } from "../utils/authStorage.js";
 
@@ -9,7 +13,9 @@ export class AppErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Application startup failed.", error, errorInfo);
+    if (import.meta.env.DEV) {
+      console.error("Application startup failed.", error, errorInfo);
+    }
   }
 
   resetApplication = () => {

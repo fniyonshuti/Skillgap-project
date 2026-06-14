@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Metadata for evidence files stored outside MongoDB.
+ */
+
 import mongoose from "mongoose";
 
 const evidenceSchema = new mongoose.Schema(
@@ -21,21 +25,25 @@ const evidenceSchema = new mongoose.Schema(
     originalName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 255
     },
     storedName: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      maxlength: 100
     },
     mimeType: {
       type: String,
-      required: true
+      required: true,
+      maxlength: 150
     },
     size: {
       type: Number,
       required: true,
-      min: 1
+      min: 1,
+      max: 5 * 1024 * 1024
     }
   },
   { timestamps: true }

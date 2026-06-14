@@ -8,6 +8,10 @@
     "install:all": "npm ci --prefix server && npm ci --prefix client",
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "start": "npm run start --prefix server",
+    "build": "npm run build --prefix client",
+    "lint": "npm run lint --prefix server && npm run lint --prefix client",
+    "test": "npm test --prefix server && npm test --prefix client",
+    "check": "npm run lint && npm test && npm run build",
     "seed": "npm run seed --prefix server",
     "migrate:question-banks": "npm run migrate:question-banks --prefix server"
   },

@@ -1,79 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
-  BadgeCheck,
-  BookOpenCheck,
-  BriefcaseBusiness,
   BrainCircuit,
   Check,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Circle,
-  FileCheck2,
   FileUp,
-  FileText,
-  FlaskConical,
-  GraduationCap,
   Info,
   Link as LinkIcon,
   Layers3,
   LoaderCircle,
   Paperclip,
   ShieldCheck,
-  Target,
-  Trash2,
-  UserCheck
+  Trash2
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  EVIDENCE_SOURCE_MAP,
+  GAP_PRIORITY_ORDER
+} from "../features/assessments/assessmentConfig.js";
+import { AssessmentOverview } from "../features/assessments/components/AssessmentOverview.jsx";
+import { AssessmentResult } from "../features/assessments/components/AssessmentResult.jsx";
+import { AssessmentScoringGuide } from "../features/assessments/components/AssessmentScoringGuide.jsx";
+import {
+  buildAssessmentPayload,
+  formatFileSize,
+  isAnswerSetComplete,
+  isCompetencyComplete
+} from "../features/assessments/assessmentUtils.js";
 import { api, getErrorMessage } from "../services/api.js";
-
-const evidenceSources = [
-  {
-    key: "practical",
-    label: "Practical assessment",
-    weight: 40,
-    icon: FlaskConical,
-    help: "System-scored questions about lab tasks, demonstrations, and practical outcomes."
-  },
-  {
-    key: "portfolio",
-    label: "Portfolio evidence",
-    weight: 30,
-    icon: BriefcaseBusiness,
-    help: "System-scored questions about projects, certificates, and verified technical work."
-  },
-  {
-    key: "academic",
-    label: "Academic record",
-    weight: 20,
-    icon: GraduationCap,
-    help: "Structured questions linked to relevant modules, courses, and academic records."
-  },
-  {
-    key: "selfAssessment",
-    label: "Self-assessment",
-    weight: 10,
-    icon: UserCheck,
-    help: "Capability questions checked alongside the evidence you submit."
-  }
-];
-
-const levelGuide = [
-  { level: 4, range: "80-100", label: "Highly Competent" },
-  { level: 3, range: "60-79", label: "Competent" },
-  { level: 2, range: "40-59", label: "Partially Competent" },
-  { level: 1, range: "0-39", label: "Not Yet Competent" }
-];
-
-const priorityOrder = { high: 1, medium: 2, low: 3, none: 4 };
-const evidenceSourceMap = new Map(evidenceSources.map((source) => [source.key, source]));
-
-function formatFileSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 export function AssessmentPage() {
   const [domains, setDomains] = useState([]);
@@ -130,25 +86,18 @@ export function AssessmentPage() {
     [domains, domainId]
   );
 
-  const isAnswerSetComplete = (competency) =>
-    competency.assessmentReady &&
-    competency.assessmentQuestions.length > 0 &&
-    competency.assessmentQuestions.every(
-      (question) => Boolean(answers[competency._id]?.[question._id])
+  const answerSetIsComplete = (competency) => isAnswerSetComplete(competency, answers);
+  const competencyIsComplete = (competency) =>
+    isCompetencyComplete(
+      competency,
+      answers,
+      evidence,
+      evidenceLinks,
+      evidenceFiles
     );
-
-  const hasEvidence = (competencyId) =>
-    Boolean(
-      evidence[competencyId]?.trim() ||
-        evidenceLinks[competencyId]?.trim() ||
-        evidenceFiles[competencyId]?.length
-    );
-
-  const isCompetencyComplete = (competency) =>
-    isAnswerSetComplete(competency) && hasEvidence(competency._id);
 
   const completedCount = useMemo(
-    () => competencies.filter(isCompetencyComplete).length,
+    () => competencies.filter(competencyIsComplete).length,
     [competencies, answers, evidence, evidenceLinks, evidenceFiles]
   );
 
@@ -195,14 +144,16 @@ export function AssessmentPage() {
     : 0;
   const activeQuestionCount = activeCompetency?.assessmentQuestions?.length || 0;
   const activeIsComplete = Boolean(
-    activeCompetency && isCompetencyComplete(activeCompetency)
+    activeCompetency && competencyIsComplete(activeCompetency)
   );
   const uploadInProgress = Object.values(uploadingEvidence).some(Boolean);
 
   const sortedGapItems = useMemo(() => {
     if (!result?.gapAnalysis?.gapItems) return [];
     return [...result.gapAnalysis.gapItems].sort(
-      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority] || b.gapLevel - a.gapLevel
+      (a, b) =>
+        GAP_PRIORITY_ORDER[a.priority] - GAP_PRIORITY_ORDER[b.priority] ||
+        b.gapLevel - a.gapLevel
     );
   }, [result]);
 
@@ -273,7 +224,7 @@ export function AssessmentPage() {
   function goToNextCompetency() {
     if (!activeCompetency) return;
 
-    if (!isAnswerSetComplete(activeCompetency)) {
+    if (!answerSetIsComplete(activeCompetency)) {
       setError("Answer every question for this competency before continuing.");
       return;
     }
@@ -314,20 +265,15 @@ export function AssessmentPage() {
     }
 
     try {
-      const payload = {
+      const payload = buildAssessmentPayload({
         domainId,
-        items: competencies.map((competency) => ({
-          competencyId: competency._id,
-          responses: competency.assessmentQuestions.map((question) => ({
-            questionId: question._id,
-            optionId: answers[competency._id][question._id]
-          })),
-          evidence: evidence[competency._id] || "",
-          evidenceLink: evidenceLinks[competency._id] || "",
-          evidenceIds: (evidenceFiles[competency._id] || []).map((file) => file.id),
-          remarks: remarks[competency._id] || ""
-        }))
-      };
+        competencies,
+        answers,
+        evidence,
+        evidenceLinks,
+        evidenceFiles,
+        remarks
+      });
 
       const { data } = await api.post("/assessments", payload);
       setResult(data);
@@ -379,249 +325,24 @@ export function AssessmentPage() {
         ))}
       </section>
 
-      {result && (
-        <section className="panel assessment-result-panel">
-          <div className="assessment-result-head">
-            <div>
-              <span className="eyebrow">{result.message}</span>
-              <h3>Your competency gap analysis</h3>
-              <p>{result.gapAnalysis.summary}</p>
-            </div>
-            <BadgeCheck size={34} />
-          </div>
+      <AssessmentResult
+        result={result}
+        sortedGapItems={sortedGapItems}
+        competencyMap={competencyMap}
+      />
 
-          <div className="workflow-confirmations" aria-label="Analysis workflow status">
-            {Object.values(result.workflow || {}).map((message) => (
-              <span key={message}>
-                <FileCheck2 size={16} />
-                {message}
-              </span>
-            ))}
-          </div>
+      <AssessmentOverview
+        domains={domains}
+        domainId={domainId}
+        onDomainChange={setDomainId}
+        selectedDomain={selectedDomain}
+        completionPercentage={completionPercentage}
+        completedCount={completedCount}
+        competencyCount={competencies.length}
+        history={history}
+      />
 
-          <div className="metrics-grid">
-            <div className="metric-card metric-success">
-              <span>Weighted score</span>
-              <strong>{result.gapAnalysis.readinessScore}%</strong>
-            </div>
-            <div className="metric-card metric-warning">
-              <span>Average gap</span>
-              <strong>{result.gapAnalysis.overallGapScore}</strong>
-            </div>
-            <div className="metric-card">
-              <span>Learning actions</span>
-              <strong>{result.recommendations.length}</strong>
-            </div>
-          </div>
-
-          <div className="result-grid">
-            <div>
-              <h4>Competency mapping</h4>
-              <div className="gap-list">
-                {sortedGapItems.map((item) => {
-                  const competency = competencyMap.get(String(item.competencyId));
-                  return (
-                    <article key={`${item.competencyId}-${item.priority}`} className="gap-card">
-                      <div>
-                        <strong>{competency?.title || "Competency"}</strong>
-                        <span>
-                          {item.competencyScore}% - Level {item.achievedLevel} achieved / Level{" "}
-                          {item.requiredLevel} required
-                        </span>
-                        <small>{item.classification}</small>
-                      </div>
-                      <span className={`tag tag-${item.priority}`}>{item.priority}</span>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h4>Personalized next steps</h4>
-              <div className="gap-list">
-                {result.recommendations.map((item) => {
-                  const competency = competencyMap.get(String(item.competencyId));
-                  return (
-                    <article key={item._id || item.competencyId} className="gap-card recommendation-mini">
-                      <div>
-                        <strong>{competency?.title || "Competency"}</strong>
-                        <span>{item.recommendationText}</span>
-                        {item.actionItems?.slice(0, 2).map((action) => (
-                          <small key={action}>- {action}</small>
-                        ))}
-                      </div>
-                    </article>
-                  );
-                })}
-                {!result.recommendations.length && (
-                  <p className="muted">You currently meet every selected RTB requirement.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="result-next-actions">
-            <div>
-              <FileCheck2 size={20} />
-              <span>
-                <strong>Your report has been generated and saved.</strong>
-                <small>Continue with the final graduate workflow steps.</small>
-              </span>
-            </div>
-            <div>
-              <Link className="secondary-button button-with-icon" to="/recommendations">
-                View recommendations
-              </Link>
-              <Link className="primary-button fit button-with-icon" to="/reports">
-                View competency report
-                <ChevronRight size={17} />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="assessment-overview-grid">
-        <article className="panel assessment-domain-panel">
-          <div className="assessment-panel-title">
-            <Target size={22} />
-            <div>
-              <h3>Assessment setup</h3>
-              <p>Choose the ICT occupational domain to evaluate.</p>
-            </div>
-          </div>
-          <label>
-            ICT domain
-            <select value={domainId} onChange={(event) => setDomainId(event.target.value)}>
-              {domains.map((domain) => (
-                <option key={domain._id} value={domain._id}>
-                  {domain.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {selectedDomain && (
-            <div className="domain-summary">
-              <strong>{selectedDomain.name}</strong>
-              <p>{selectedDomain.description}</p>
-            </div>
-          )}
-        </article>
-
-        <article className="panel assessment-progress-panel">
-          <div className="assessment-panel-title">
-            <ClipboardCheck size={22} />
-            <div>
-              <h3>Progress</h3>
-              <p>Complete the questions and evidence for every RTB competency.</p>
-            </div>
-          </div>
-          <div className="progress-ring-row">
-            <div className="progress-ring" style={{ "--progress": `${completionPercentage}%` }}>
-              <span>{completionPercentage}%</span>
-            </div>
-            <div>
-              <strong>
-                {completedCount} of {competencies.length}
-              </strong>
-              <p>competencies complete</p>
-            </div>
-          </div>
-        </article>
-
-        <article className="panel assessment-history-panel">
-          <div className="assessment-panel-title">
-            <FileText size={22} />
-            <div>
-              <h3>Assessment history</h3>
-              <p>Your latest evidence-based assessments.</p>
-            </div>
-          </div>
-          <div className="history-list">
-            {history.slice(0, 5).map((item) => (
-              <div key={item._id} className="history-row">
-                <strong>{item.domainId?.name || "ICT domain"}</strong>
-                <span>
-                  {item.overallCompetencyScore !== undefined
-                    ? `${item.overallCompetencyScore}% - Level ${item.overallCompetencyLevel}`
-                    : `Legacy score ${item.totalScore} / 5`}{" "}
-                  - {new Date(item.createdAt).toLocaleDateString()}
-                </span>
-                <small>
-                  {item.status} - evidence {item.evidenceVerificationStatus || "submitted"}
-                </small>
-              </div>
-            ))}
-            {!history.length && <p className="muted">No assessment submitted yet.</p>}
-          </div>
-        </article>
-      </section>
-
-      <section className="panel scoring-guide-panel">
-        <div className="assessment-panel-title">
-          <BookOpenCheck size={22} />
-          <div>
-            <h3>How your result is calculated</h3>
-            <p>Your answers are scored privately by the server using administrator-defined rules.</p>
-          </div>
-        </div>
-        <div className="methodology-grid">
-          {evidenceSources.map((source) => {
-            const Icon = source.icon;
-            return (
-              <article key={source.key} className="methodology-card">
-                <Icon size={20} />
-                <div>
-                  <strong>{source.label}</strong>
-                  <span>{source.weight}% weight</span>
-                  <p>{source.help}</p>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        <div className="level-guide-row">
-          {levelGuide.map((item) => (
-            <div key={item.level}>
-              <strong>Level {item.level}</strong>
-              <span>{item.range}%</span>
-              <small>{item.label}</small>
-            </div>
-          ))}
-        </div>
-        <div className="algorithm-flow" aria-label="Skills gap analysis algorithm">
-          <div className="algorithm-step">
-            <span>1</span>
-            <strong>Collect evidence</strong>
-            <small>Answers and supporting files</small>
-          </div>
-          <ChevronRight size={18} />
-          <div className="algorithm-step">
-            <span>2</span>
-            <strong>Apply weights</strong>
-            <small>Server derives four source scores</small>
-          </div>
-          <ChevronRight size={18} />
-          <div className="algorithm-step">
-            <span>3</span>
-            <strong>Map RTB level</strong>
-            <small>Score becomes Level 1-4</small>
-          </div>
-          <ChevronRight size={18} />
-          <div className="algorithm-step">
-            <span>4</span>
-            <strong>Calculate gap</strong>
-            <small>Required level - achieved level</small>
-          </div>
-          <ChevronRight size={18} />
-          <div className="algorithm-step">
-            <span>5</span>
-            <strong>Recommend action</strong>
-            <small>No, low, moderate, or high gap</small>
-          </div>
-        </div>
-      </section>
+      <AssessmentScoringGuide />
 
       <form className="panel form-panel professional-assessment-form" onSubmit={handleSubmit}>
         <div className="assessment-form-head">
@@ -661,7 +382,7 @@ export function AssessmentPage() {
             </div>
             <div className="competency-step-list">
               {competencies.map((competency, index) => {
-                const complete = isCompetencyComplete(competency);
+                const complete = competencyIsComplete(competency);
                 return (
                   <button
                     key={competency._id}
@@ -746,7 +467,7 @@ export function AssessmentPage() {
 
                 <div className="assessment-question-list">
                   {activeCompetency.assessmentQuestions.map((question, questionIndex) => {
-                    const source = evidenceSourceMap.get(question.source);
+                    const source = EVIDENCE_SOURCE_MAP.get(question.source);
                     const SourceIcon = source?.icon || ClipboardCheck;
                     const selectedOptionId =
                       answers[activeCompetency._id]?.[question._id] || "";

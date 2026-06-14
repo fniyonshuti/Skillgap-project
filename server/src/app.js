@@ -1,87 +1,53 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import morgan from "morgan";
+import { isAllowedOrigin } from "./config/cors.js";
 import { env } from "./config/env.js";
-import { analyticsRoutes } from "./routes/analyticsRoutes.js";
-import { assessmentRoutes } from "./routes/assessmentRoutes.js";
-import { authRoutes } from "./routes/authRoutes.js";
-import { competencyRoutes } from "./routes/competencyRoutes.js";
-import { domainRoutes } from "./routes/domainRoutes.js";
-import { evidenceRoutes } from "./routes/evidenceRoutes.js";
-import { gapRoutes } from "./routes/gapRoutes.js";
-import { graduateRoutes } from "./routes/graduateRoutes.js";
-import { institutionRoutes } from "./routes/institutionRoutes.js";
-import { notificationRoutes } from "./routes/notificationRoutes.js";
-import { recommendationRoutes } from "./routes/recommendationRoutes.js";
-import { recommendationRuleRoutes } from "./routes/recommendationRuleRoutes.js";
-import { reportRoutes } from "./routes/reportRoutes.js";
-import { userRoutes } from "./routes/userRoutes.js";
+import {
+  apiRateLimit,
+  authenticationRateLimit
+} from "./config/rateLimits.js";
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";
-
-export function isAllowedOrigin(origin) {
-  if (!origin) {
-    return true;
-  }
-
-  const normalizedOrigin = origin.replace(/\/+$/, "");
-  if (env.clientUrls.includes(normalizedOrigin)) {
-    return true;
-  }
-
-  try {
-    const url = new URL(normalizedOrigin);
-    return (
-      env.nodeEnv === "production" &&
-      url.protocol === "https:" &&
-      url.hostname.endsWith(".vercel.app")
-    );
-  } catch {
-    return false;
-  }
-}
+import { requestContext } from "./middlewares/requestContext.js";
+import { registerApiRoutes } from "./routes/index.js";
 
 export const app = express();
 
+if (env.nodeEnv === "production") {
+  // Render and similar platforms terminate TLS at a trusted reverse proxy.
+  // Express must trust that single hop for accurate rate-limit client IPs.
+  app.set("trust proxy", 1);
+}
+
+app.disable("x-powered-by");
+app.use(requestContext);
 app.use(helmet());
 app.use(
   cors({
     origin(origin, callback) {
-      callback(null, isAllowedOrigin(origin));
+      callback(null, isAllowedOrigin(origin, env.clientUrls));
     },
     credentials: true
   })
 );
 app.use(express.json({ limit: "1mb" }));
-app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
+morgan.token("request-id", (req) => req.requestId);
 app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 300,
-    standardHeaders: true,
-    legacyHeaders: false
-  })
+  morgan(
+    env.nodeEnv === "production"
+      ? ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" request_id=:request-id'
+      : ":method :url :status :response-time ms request_id=:request-id"
+  )
 );
+app.use(apiRateLimit);
+app.use("/api/auth", authenticationRateLimit);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "skills-gap-analysis-api" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/institutions", institutionRoutes);
-app.use("/api/domains", domainRoutes);
-app.use("/api/evidence", evidenceRoutes);
-app.use("/api/competencies", competencyRoutes);
-app.use("/api/graduates", graduateRoutes);
-app.use("/api/assessments", assessmentRoutes);
-app.use("/api/gaps", gapRoutes);
-app.use("/api/recommendations", recommendationRoutes);
-app.use("/api/recommendation-rules", recommendationRuleRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/analytics", analyticsRoutes);
+registerApiRoutes(app);
 
 app.use(notFound);
 app.use(errorHandler);

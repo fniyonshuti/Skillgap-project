@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Graduate profile and institution membership model.
+ */
+
 import mongoose from "mongoose";
 
 const graduateSchema = new mongoose.Schema(
@@ -16,11 +20,13 @@ const graduateSchema = new mongoose.Schema(
       type: String,
       trim: true,
       unique: true,
-      sparse: true
+      sparse: true,
+      maxlength: 80
     },
     program: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 160
     },
     graduationYear: {
       type: Number,
@@ -29,12 +35,14 @@ const graduateSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      trim: true
+      trim: true,
+      maxlength: 40
     },
     district: {
       type: String,
       default: "Kicukiro",
-      trim: true
+      trim: true,
+      maxlength: 120
     },
     profileCompleted: {
       type: Boolean,
