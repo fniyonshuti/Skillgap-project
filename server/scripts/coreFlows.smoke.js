@@ -307,7 +307,7 @@ async function runCoreFlows(baseUrl) {
     )
   );
 
-  const imageBuffer = await readFile(resolve(serverRoot, "../client/src/assets/home-hero.webp"));
+  const imageBuffer = await readFile(resolve(serverRoot, "../client/src/assets/images/home-hero.webp"));
   const evidenceForm = new FormData();
   evidenceForm.append(
     "file",

@@ -8,8 +8,8 @@ import {
   apiRateLimit,
   authenticationRateLimit
 } from "./config/rateLimits.js";
-import { errorHandler, notFound } from "./middlewares/errorHandler.js";
-import { requestContext } from "./middlewares/requestContext.js";
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import { requestContext } from "./middleware/requestContextMiddleware.js";
 import { registerApiRoutes } from "./routes/index.js";
 
 export const app = express();

@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
-import { Assessment } from "../models/Assessment.js";
-import { Competency } from "../models/Competency.js";
-import { Evidence } from "../models/Evidence.js";
-import { GapAnalysis } from "../models/GapAnalysis.js";
-import { Graduate } from "../models/Graduate.js";
-import { ICTDomain } from "../models/ICTDomain.js";
-import { Institution } from "../models/Institution.js";
-import { Notification } from "../models/Notification.js";
-import { Recommendation } from "../models/Recommendation.js";
-import { Report } from "../models/Report.js";
-import { User } from "../models/User.js";
-import { buildDefaultQuestionBank } from "../services/defaultQuestionBank.js";
+import { Assessment } from "../modules/assessments/assessment.model.js";
+import { Competency } from "../modules/competencies/competency.model.js";
+import { Evidence } from "../modules/evidence/evidence.model.js";
+import { GapAnalysis } from "../modules/gaps/gapAnalysis.model.js";
+import { Graduate } from "../modules/graduates/graduate.model.js";
+import { ICTDomain } from "../modules/competencies/domain.model.js";
+import { Institution } from "../modules/institutions/institution.model.js";
+import { Notification } from "../modules/notifications/notification.model.js";
+import { Recommendation } from "../modules/recommendations/recommendation.model.js";
+import { Report } from "../modules/reports/report.model.js";
+import { User } from "../modules/users/user.model.js";
+import { buildDefaultQuestionBank } from "../modules/competencies/defaultQuestionBank.service.js";
 
 const seedPassword = process.env.SEED_DEFAULT_PASSWORD;
 

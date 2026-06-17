@@ -12,7 +12,7 @@ function findJavaScriptFiles(directory) {
 
 const files = [
   ...findJavaScriptFiles(fileURLToPath(new URL("../src", import.meta.url))),
-  ...findJavaScriptFiles(fileURLToPath(new URL("../test", import.meta.url)))
+  ...findJavaScriptFiles(fileURLToPath(new URL("../tests", import.meta.url)))
 ];
 
 for (const file of files) {

@@ -1,17 +1,17 @@
-import { analyticsRoutes } from "./analyticsRoutes.js";
-import { assessmentRoutes } from "./assessmentRoutes.js";
-import { authRoutes } from "./authRoutes.js";
-import { competencyRoutes } from "./competencyRoutes.js";
-import { domainRoutes } from "./domainRoutes.js";
-import { evidenceRoutes } from "./evidenceRoutes.js";
-import { gapRoutes } from "./gapRoutes.js";
-import { graduateRoutes } from "./graduateRoutes.js";
-import { institutionRoutes } from "./institutionRoutes.js";
-import { notificationRoutes } from "./notificationRoutes.js";
-import { recommendationRoutes } from "./recommendationRoutes.js";
-import { recommendationRuleRoutes } from "./recommendationRuleRoutes.js";
-import { reportRoutes } from "./reportRoutes.js";
-import { userRoutes } from "./userRoutes.js";
+import { analyticsRoutes } from "../modules/dashboards/dashboard.routes.js";
+import { assessmentRoutes } from "../modules/assessments/assessment.routes.js";
+import { authRoutes } from "../modules/auth/auth.routes.js";
+import { competencyRoutes } from "../modules/competencies/competency.routes.js";
+import { domainRoutes } from "../modules/competencies/domain.routes.js";
+import { evidenceRoutes } from "../modules/evidence/evidence.routes.js";
+import { gapRoutes } from "../modules/gaps/gap.routes.js";
+import { graduateRoutes } from "../modules/graduates/graduate.routes.js";
+import { institutionRoutes } from "../modules/institutions/institution.routes.js";
+import { notificationRoutes } from "../modules/notifications/notification.routes.js";
+import { recommendationRoutes } from "../modules/recommendations/recommendation.routes.js";
+import { recommendationRuleRoutes } from "../modules/recommendations/recommendationRule.routes.js";
+import { reportRoutes } from "../modules/reports/report.routes.js";
+import { userRoutes } from "../modules/users/user.routes.js";
 
 const API_ROUTES = Object.freeze([
   ["/api/auth", authRoutes],

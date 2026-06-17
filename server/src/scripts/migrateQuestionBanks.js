@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
-import { Competency } from "../models/Competency.js";
-import { buildDefaultQuestionBank } from "../services/defaultQuestionBank.js";
-import { isQuestionBankReady } from "../services/assessmentQuestionScoringService.js";
+import { Competency } from "../modules/competencies/competency.model.js";
+import { buildDefaultQuestionBank } from "../modules/competencies/defaultQuestionBank.service.js";
+import { isQuestionBankReady } from "../engine/competency-engine/assessmentQuestionScoringEngine.js";
 
 async function migrateQuestionBanks() {
   await connectDatabase();

@@ -1,5 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
-import { AppErrorBoundary } from "../components/AppErrorBoundary.jsx";
+import { AppErrorBoundary } from "../components/common/AppErrorBoundary.jsx";
 import { AuthProvider } from "../context/AuthContext.jsx";
 
 /**
